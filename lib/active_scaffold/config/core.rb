@@ -114,12 +114,12 @@ module ActiveScaffold::Config
 
       # create a new default columns datastructure, since it doesn't make sense before now
       attribute_names = self.model.columns.sort_by {|c| c.to_s}
-      association_column_names = self.model.reflect_on_all_associations.collect{ |a| a.name.to_sym }.sort_by { |c| c.to_s }
+      association_column_names = self.model.associations.sort_by {|c| c.to_s}
       @columns = ActiveScaffold::DataStructures::Columns.new(self.model, attribute_names + association_column_names)
 
       # and then, let's remove some columns from the inheritable set.
       @columns.exclude(*self.class.ignore_columns)
-      @columns.exclude(*@columns.find_all { |c| c.column and (c.column[:primary_key] or c.column.name =~ /(_id|_count)$/) }.collect {|c| c.name})
+      @columns.exclude(*@columns.find_all {|c| c.column and (c.column[:primary_key] or c.name.to_s =~ /(_id|_count)$/) }.collect {|c| c.name})
 
       # inherit the global frontend
       @frontend = self.class.frontend
