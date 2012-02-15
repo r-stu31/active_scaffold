@@ -126,11 +126,11 @@ module ActiveScaffold::Actions
       redirect_to main_path_to_return
     end
 
-    # Override this method on your controller to define conditions to be used when querying a recordset (e.g. for List). The return of this method should be any format compatible with the :conditions clause of ActiveRecord::Base's find.
+    # Override this method on your controller to define conditions to be used when querying a recordset (e.g. for List). The return of this method should be any format compatible with the :conditions clause of Sequel::Model's find.
     def conditions_for_collection
     end
   
-    # Override this method on your controller to define joins to be used when querying a recordset (e.g. for List).  The return of this method should be any format compatible with the :joins clause of ActiveRecord::Base's find.
+    # Override this method on your controller to define joins to be used when querying a recordset (e.g. for List).  The return of this method should be any format compatible with the :joins clause of Sequel::Model's find.
     def joins_for_collection
     end
   

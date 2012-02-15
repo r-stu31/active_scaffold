@@ -1,5 +1,5 @@
 # Bugfix: Team.offset(1).limit(1) throws an error
-ActiveRecord::Base.instance_eval do
+Sequel::Model.instance_eval do
   def offset(*args, &block) 
     scoped.__send__(:offset, *args, &block)
   rescue NoMethodError       

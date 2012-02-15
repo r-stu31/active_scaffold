@@ -39,7 +39,7 @@ module ActionView::Helpers #:nodoc:
     #   * constrained columns will be hidden (they're pretty boring at this point)
     #
     # You may also specify options[:conditions] for the embedded scaffold. These only do 1/3 of what
-    # constraints do (they only limit search results). Any format accepted by ActiveRecord::Base.find is valid.
+    # constraints do (they only limit search results). Any format accepted by Sequel::Model.find is valid.
     #
     # Defining options[:label] lets you completely customize the list title for the embedded scaffold.
     #

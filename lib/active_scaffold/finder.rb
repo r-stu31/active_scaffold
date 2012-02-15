@@ -1,7 +1,7 @@
 module ActiveScaffold
   module Finder
     def self.like_operator
-      @@like_operator ||= ::ActiveRecord::Base.connection.adapter_name == "PostgreSQL" ? "ILIKE" : "LIKE"
+      @@like_operator ||= ::Sequel::Model.connection.adapter_name == "PostgreSQL" ? "ILIKE" : "LIKE"
     end
 
     module ClassMethods

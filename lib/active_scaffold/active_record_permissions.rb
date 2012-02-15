@@ -34,7 +34,7 @@ module ActiveRecordPermissions
       # because the object may change (someone may log in or out). So we give ActiveRecord a proc that ties to the
       # current_user_method on this ApplicationController.
       def assign_current_user_to_models
-        ActiveRecord::Base.current_user_proc = proc {send(ActiveRecordPermissions.current_user_method)}
+        Sequel::Model.current_user_proc = proc {send(ActiveRecordPermissions.current_user_method)}
       end
     end
 
@@ -49,7 +49,7 @@ module ActiveRecordPermissions
 
         # Class-level access to the current user
         def current_user
-          ActiveRecord::Base.current_user_proc.call if ActiveRecord::Base.current_user_proc
+          Sequel::Model.current_user_proc.call if Sequel::Model.current_user_proc
         end
       end
 

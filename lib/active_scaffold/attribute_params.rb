@@ -157,7 +157,7 @@ module ActiveScaffold
       if params.has_key? pk
         # modifying the current object of a singular association
         pk_val = params[pk] 
-        if current and current.is_a? ActiveRecord::Base and current.id.to_s == pk_val
+        if current and current.is_a? Sequel::Model and current.id.to_s == pk_val
           current
         # modifying one of the current objects in a plural association
         elsif current and current.respond_to?(:any?) and current.any? {|o| o.id.to_s == pk_val}

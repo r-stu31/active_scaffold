@@ -1,5 +1,5 @@
 # save and validation support for associations.
-class ActiveRecord::Base
+class Sequel::Model
   def associated_valid?(path = [])
     return true if path.include?(self) # prevent recursion (if associated and parent are new records)
     path << self
