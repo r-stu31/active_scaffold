@@ -91,7 +91,7 @@ module ActiveScaffold
         if column.association
           associated_for_authorized = if associated.nil? || (associated.respond_to?(:blank?) && associated.blank?)
             column.association.klass
-          elsif [:has_many, :has_and_belongs_to_many].include? column.association.macro
+          elsif column.plural_association?
             associated.first
           else
             associated
@@ -190,14 +190,14 @@ module ActiveScaffold
       end
 
       def format_association_value(value, column, size)
-        format_value case column.association.macro
-          when :has_one, :belongs_to
+        format_value case
+          when column.singular_association?
             if column.polymorphic_association?
               "#{value.class.model_name.human}: #{value.to_label}"
             else
               value.to_label
             end
-          when :has_many, :has_and_belongs_to_many
+          when column.plural_association?
             if column.associated_limit.nil?
               firsts = value.collect { |v| v.to_label }
             else
