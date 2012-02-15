@@ -119,7 +119,7 @@ module ActiveScaffold::Config
 
       # and then, let's remove some columns from the inheritable set.
       @columns.exclude(*self.class.ignore_columns)
-      @columns.exclude(*@columns.find_all { |c| c.column and (c.column.primary or c.column.name =~ /(_id|_count)$/) }.collect {|c| c.name})
+      @columns.exclude(*@columns.find_all { |c| c.column and (c.column[:primary_key] or c.column.name =~ /(_id|_count)$/) }.collect {|c| c.name})
 
       # inherit the global frontend
       @frontend = self.class.frontend
