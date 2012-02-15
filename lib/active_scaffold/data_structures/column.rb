@@ -262,7 +262,7 @@ module ActiveScaffold::DataStructures
     def ==(other) #:nodoc:
       # another column
       if other.respond_to? :name and other.class == self.class
-        self.name == other.name.to_sym
+        self.name == other.name
       # a string or symbol
       elsif other.respond_to? :to_sym
         self.name == other.to_sym rescue false # catch "interning empty string"
@@ -274,7 +274,7 @@ module ActiveScaffold::DataStructures
 
     # instantiation is handled internally through the DataStructures::Columns object
     def initialize(name, active_record_class) #:nodoc:
-      self.name = name.to_sym
+      self.name = name
       @column = active_record_class.columns_hash[self.name.to_s]
       @association = active_record_class.reflect_on_association(self.name)
       @autolink = !@association.nil?
