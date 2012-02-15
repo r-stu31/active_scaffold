@@ -26,15 +26,6 @@ ActiveScaffold::Config::Core.class_eval do
   alias_method_chain :initialize, :date_picker
 end
 
-ActiveRecord::ConnectionAdapters::Column.class_eval do
-  class << self
-    def fallback_string_to_date_with_date_picker(string)
-      Date.strptime(string, I18n.t('date.formats.default')) rescue fallback_string_to_date_without_date_picker(string)
-    end
-    alias_method_chain :fallback_string_to_date, :date_picker
-  end
-end
-
 ActionView::Base.class_eval do
   include ActiveScaffold::Bridges::Shared::DateBridge::SearchColumnHelpers
   alias_method :active_scaffold_search_date_picker, :active_scaffold_search_date_bridge
