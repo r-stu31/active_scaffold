@@ -59,11 +59,6 @@ module ActiveScaffold
       def action_link_to_inline_form(column, record, associated, text)
         link = column.link.clone
         link.label = text
-        if column.polymorphic_association?
-          polymorphic_controller = controller_path_for_activerecord(record.send(column.association.name).class)
-          return link if polymorphic_controller.nil?
-          link.controller = polymorphic_controller
-        end
         configure_column_link(link, associated, column.actions_for_association_links)
       end
 
@@ -192,11 +187,7 @@ module ActiveScaffold
       def format_association_value(value, column, size)
         format_value case
           when column.singular_association?
-            if column.polymorphic_association?
-              "#{value.class.model_name.human}: #{value.to_label}"
-            else
-              value.to_label
-            end
+            value.to_label
           when column.plural_association?
             if column.associated_limit.nil?
               firsts = value.collect { |v| v.to_label }

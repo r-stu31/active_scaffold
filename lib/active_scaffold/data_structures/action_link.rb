@@ -38,7 +38,7 @@ module ActiveScaffold::DataStructures
     end
 
     def static_controller?
-      !(@controller.is_a?(Proc) || (@controller == :polymorph))
+      !@controller.is_a?(Proc)
     end
 
     # a hash of request parameters

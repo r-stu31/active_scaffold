@@ -11,7 +11,7 @@ module ActiveScaffold
     def set_active_scaffold_constraints
       associations_by_params = {}
       active_scaffold_config.model.reflect_on_all_associations.each do |association|
-        associations_by_params[association.klass.name.foreign_key] = association.name unless association.options[:polymorphic]
+        associations_by_params[association.klass.name.foreign_key] = association.name
       end
       params.each do |key, value|
         active_scaffold_constraints[associations_by_params[key]] = value if associations_by_params.include? key
@@ -118,20 +118,7 @@ module ActiveScaffold
         value = association.klass.find(value).send(association.options[:primary_key])
       end
 
-      condition = constraint_condition_for("#{table}.#{field}", value)
-      if association.options[:polymorphic]
-        begin
-          parent_scaffold = "#{session_info[:parent_scaffold].to_s.camelize}Controller".constantize
-          condition = merge_conditions(
-            condition,
-            constraint_condition_for("#{table}.#{association.name}_type", parent_scaffold.active_scaffold_config.model_id.to_s)
-          )
-        rescue ActiveScaffold::ControllerNotFound
-          nil
-        end
-      end
-
-      condition
+      constraint_condition_for("#{table}.#{field}", value)
     end
 
     def constraint_error(klass, column_name)
@@ -154,8 +141,6 @@ module ActiveScaffold
         if column and column.association
           if column.plural_association?
             record.send("#{k}").send(:<<, column.association.klass.find(v))
-          elsif column.association.options[:polymorphic]
-            record.send("#{k}=", params[:parent_model].constantize.find(v))
           else # regular singular association
             record.send("#{k}=", column.association.klass.find(v))
 

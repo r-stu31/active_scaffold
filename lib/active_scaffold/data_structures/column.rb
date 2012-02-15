@@ -116,7 +116,7 @@ module ActiveScaffold::DataStructures
 
     attr_writer :search_ui
     def search_ui
-      @search_ui || @form_ui || (@association && !polymorphic_association? ? :select : nil)
+      @search_ui || @form_ui || (@association ? :select : nil)
     end
 
     # a place to store dev's column specific options
@@ -238,9 +238,6 @@ module ActiveScaffold::DataStructures
     def through_association?
       self.association and self.association.options[:through]
     end
-    def polymorphic_association?
-      self.association and self.association.options.has_key? :polymorphic and self.association.options[:polymorphic]
-    end
     def readonly_association?
       if self.association
         if self.association.options.has_key? :readonly
@@ -308,7 +305,7 @@ module ActiveScaffold::DataStructures
       
       @weight = estimate_weight
 
-      self.includes = (association and not polymorphic_association?) ? [association.name] : []
+      self.includes = association ? [association.name] : []
     end
 
     # just the field (not table.field)
@@ -363,7 +360,7 @@ module ActiveScaffold::DataStructures
       self.search_sql = unless self.virtual?
         if association.nil?
           self.field.to_s
-        elsif !self.polymorphic_association?
+        else
           [association.klass.table_name, association.klass.primary_key].collect! do |str|
             association.klass.connection.quote_column_name str
           end.join('.')

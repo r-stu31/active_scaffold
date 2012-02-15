@@ -19,7 +19,6 @@ module ActiveRecord
       protected
 
         def autodetect_inverse
-          return nil if options[:polymorphic]
           reverse_matches = []
 
           # stage 1 filter: collect associations that point back to this model and use the same foreign_key
@@ -31,7 +30,7 @@ module ActiveRecord
             else
               # skip over has_many :through associations
               next if assoc.options[:through]
-              next unless assoc.options[:polymorphic] or assoc.class_name.constantize == self.active_record
+              next unless assoc.class_name.constantize == self.active_record
 
               case [assoc.macro, self.macro].find_all{|m| m == :has_and_belongs_to_many}.length
                 # if both are a habtm, then match them based on the join table

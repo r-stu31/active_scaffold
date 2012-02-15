@@ -247,9 +247,7 @@ module ActiveScaffold
     
     def active_scaffold_controller_for_column(column, options = {})
       begin
-        if column.polymorphic_association?
-          :polymorph
-        elsif options.include?(:controller)
+        if options.include?(:controller)
           "#{options[:controller].to_s.camelize}Controller".constantize
         else
           active_scaffold_controller_for(column.association.klass)
@@ -263,7 +261,7 @@ module ActiveScaffold
       controller = active_scaffold_controller_for_column(column, options)
       
       unless controller.nil?
-        options.reverse_merge! :label => column.label, :position => :after, :type => :member, :controller => (controller == :polymorph ? controller : controller.controller_path), :column => column
+        options.reverse_merge! :label => column.label, :position => :after, :type => :member, :controller => controller.controller_path, :column => column
         options[:parameters] ||= {}
         options[:parameters].reverse_merge! :parent_scaffold => controller_path, :association => column.association.name
         if column.plural_association?
@@ -272,7 +270,7 @@ module ActiveScaffold
           ActiveScaffold::DataStructures::ActionLink.new('index', options) #unless column.through_association?
         else
           actions = [:create, :update, :show] 
-          actions = controller.active_scaffold_config.actions unless controller == :polymorph
+          actions = controller.active_scaffold_config.actions
           column.actions_for_association_links.delete :new unless actions.include? :create
           column.actions_for_association_links.delete :edit unless actions.include? :update
           column.actions_for_association_links.delete :show unless actions.include? :show

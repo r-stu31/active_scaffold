@@ -66,9 +66,6 @@ module ActiveScaffold
       def in_subform?(column, parent_record)
         return true unless column.association
 
-        # Polymorphic associations can't appear because they *might* be the reverse association, and because you generally don't assign an association from the polymorphic side ... I think.
-        return false if column.polymorphic_association?
-
         # A column shouldn't be in the subform if it's the reverse association to the parent
         return false if column.association.inverse_for?(parent_record.class)
 
