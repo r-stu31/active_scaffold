@@ -11,7 +11,7 @@ module ActiveScaffold
     def set_active_scaffold_constraints
       associations_by_params = {}
       active_scaffold_config.model.reflect_on_all_associations.each do |association|
-        associations_by_params[association.klass.name.foreign_key] = association.name
+        associations_by_params[association[:class_name].foreign_key] = association[:name]
       end
       params.each do |key, value|
         active_scaffold_constraints[associations_by_params[key]] = value if associations_by_params.include? key
@@ -53,16 +53,16 @@ module ActiveScaffold
           #   data model: Park -> Den -> Bear
           #   constraint: :den => {:park => 5}
           if v.is_a? Hash
-            far_association = column.association.klass.reflect_on_association(v.keys.first)
-            field = far_association.klass.primary_key
-            table = far_association.table_name
+            far_association_klass = column.association.associated_class.association_reflection(v.keys.first).associated_class
+            field = far_association_klass.primary_key
+            table = far_association_klass.table_name
 
             active_scaffold_includes.concat([{k => v.keys.first}]) # e.g. {:den => :park}
-            constraint_condition_for("#{table}.#{field}", v.values.first)
+            constraint_condition_for("#{table}__#{field}".to_sym, v.values.first)
 
           # association column constraint
           elsif column.association
-            if column.association.macro == :has_and_belongs_to_many
+            if column.association[:type] == :many_to_many
               active_scaffold_habtm_joins.concat column.includes
             else
               active_scaffold_includes.concat column.includes
@@ -75,8 +75,8 @@ module ActiveScaffold
             constraint_condition_for(column.search_sql, v)
           end
         # unknown-to-activescaffold-but-real-database-column constraint
-        elsif active_scaffold_config.model.column_names.include? k.to_s
-          constraint_condition_for(k.to_s, v)
+        elsif active_scaffold_config.model.columns.include? k
+          constraint_condition_for(k, v)
         else
           raise ActiveScaffold::MalformedConstraint, constraint_error(active_scaffold_config.model, k), caller
         end
@@ -95,30 +95,31 @@ module ActiveScaffold
       # we have to use the other model's primary_key.
       #
       # please see the relevant tests for concrete examples.
-      field = if [:has_one, :has_many].include?(association.macro)
-        association.klass.primary_key
-      elsif [:has_and_belongs_to_many].include?(association.macro)
-        association.association_foreign_key
+      field = if [:one_to_one, :one_to_many].include?(association[:type])
+        association.associated_class.primary_key
+      elsif [:many_to_many].include?(association[:type])
+        association[:class_name].foreign_key
       else
-        association.options[:foreign_key] || association.name.to_s.foreign_key
+        association.name.to_s.foreign_key
       end
 
-      table = case association.macro
-        when :has_and_belongs_to_many
-        association.options[:join_table]
+      table = case association[:type]
+        when :many_to_many
+        association[:join_table]
 
-        when :belongs_to
+        when :many_to_one
         active_scaffold_config.model.table_name
 
         else
-        association.table_name
+        association.associated_class.table_name
       end
 
-      if association.options[:primary_key]
-        value = association.klass.find(value).send(association.options[:primary_key])
-      end
+# XXX no idea what this is supposed to do, in my setup are all association.options[:primary_key] nils
+#      if association.options[:primary_key]
+#        value = association.klass.find(value).send(association.options[:primary_key])
+#      end
 
-      constraint_condition_for("#{table}.#{field}", value)
+      constraint_condition_for("#{table}__#{field}".to_sym, value)
     end
 
     def constraint_error(klass, column_name)
@@ -140,18 +141,18 @@ module ActiveScaffold
         column = active_scaffold_config.columns[k]
         if column and column.association
           if column.plural_association?
-            record.send("#{k}").send(:<<, column.association.klass.find(v))
+            record.send("add_#{k}", column.association.associated_class.filter(v))
           else # regular singular association
-            record.send("#{k}=", column.association.klass.find(v))
+            record.send("#{k}=", column.association.associated_class.filter(v))
 
             # setting the belongs_to side of a has_one isn't safe. if the has_one was already
             # specified, rails won't automatically clear out the previous associated record.
             #
             # note that we can't take the extra step to correct this unless we're permitted to
             # run operations where activerecord auto-saves the object.
-            reverse = column.association.klass.reflect_on_association(column.association.reverse)
-            if reverse.macro == :has_one and options[:allow_autosave]
-              record.send(k).send("#{column.association.reverse}=", record)
+            reverse = column.association.associated_class.association_reflection(column.association.reciprocal)
+            if reverse[:type] == :one_to_one and options[:allow_autosave]
+              record.send(k).send("#{column.association.reciprocal}=", record)
             end
           end
         else
@@ -163,7 +164,7 @@ module ActiveScaffold
     private
 
     def constraint_condition_for(sql, value)
-      value.nil? ? "#{sql} IS NULL" : ["#{sql} = ?", value]
+      {sql => value}
     end
   end
 end

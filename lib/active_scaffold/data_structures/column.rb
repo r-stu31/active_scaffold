@@ -207,7 +207,7 @@ module ActiveScaffold::DataStructures
     attr_writer :show_blank_record
     def show_blank_record?(associated)
       if @show_blank_record
-        return false unless self.association.klass.authorized_for?(:crud_type => :create)
+        return false unless self.association.associated_class.authorized_for?(:crud_type => :create)
         self.plural_association? or (self.singular_association? and associated.blank?)
       end
     end
@@ -229,23 +229,13 @@ module ActiveScaffold::DataStructures
 
     # the association from the ActiveRecord class
     attr_reader :association
+
     def singular_association?
-      self.association and [:has_one, :belongs_to].include? self.association.macro
+      self.association and [:one_to_one, :many_to_one].include? self.association[:type]
     end
+
     def plural_association?
-      self.association and [:has_many, :has_and_belongs_to_many].include? self.association.macro
-    end
-    def through_association?
-      self.association and self.association.options[:through]
-    end
-    def readonly_association?
-      if self.association
-        if self.association.options.has_key? :readonly
-          self.association.options[:readonly]
-        else
-          self.through_association?
-        end
-      end
+      self.association and [:one_to_many, :many_to_many].include? self.association[:type]
     end
 
     # an interpreted property. the column is virtual if it isn't from the active record model or any associated models
@@ -276,7 +266,7 @@ module ActiveScaffold::DataStructures
     def initialize(name, active_record_class) #:nodoc:
       self.name = name
       @column = active_record_class.db_schema[name]
-      @association = active_record_class.reflect_on_association(self.name)
+      @association = active_record_class.association_reflection(name)
       @autolink = !@association.nil?
       @active_record_class = active_record_class
       @table = active_record_class.table_name
@@ -305,13 +295,13 @@ module ActiveScaffold::DataStructures
       
       @weight = estimate_weight
 
-      self.includes = association ? [association.name] : []
+      self.includes = association ? [association[:name]] : []
     end
 
     # just the field (not table.field)
     def field_name
       return nil if virtual?
-      column ? @active_record_class.connection.quote_column_name(column.name) : association.foreign_key
+      column ? name : association[:key]
     end
 
     def <=>(other_column)
@@ -361,9 +351,7 @@ module ActiveScaffold::DataStructures
         if association.nil?
           self.field.to_s
         else
-          [association.klass.table_name, association.klass.primary_key].collect! do |str|
-            association.klass.connection.quote_column_name str
-          end.join('.')
+          "#{association.associated_class.table_name}__#{association.associated_class.primary_key}".to_sym
         end
       end
     end

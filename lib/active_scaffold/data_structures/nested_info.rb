@@ -65,60 +65,56 @@ module ActiveScaffold::DataStructures
   class NestedInfoAssociation < NestedInfo
     def initialize(model, nested_info)
       super(model, nested_info)
-      @association = parent_model.reflect_on_association(nested_info[:name])
+      @association = parent_model.association_reflection(nested_info[:name])
       iterate_model_associations(model)
     end
     
     def name
-      self.association.name
+      self.association[:name]
     end
     
     def habtm?
-      association.macro == :has_and_belongs_to_many 
+      association[:type] == :many_to_many
     end
     
     def belongs_to?
-      association.belongs_to?
+      association[:type] == :many_to_one
     end
 
     def has_one?
-      association.macro == :has_one
+      association[:type] == :one_to_one
     end
     
     def readonly?
-      if association.options.has_key? :readonly
-        association.options[:readonly]
-      else
-        association.options.has_key? :through
-      end
+      false
     end
 
     def sorted?
-      association.options.has_key? :order
+      association.has_key? :order
     end
 
     def default_sorting
-      association.options[:order]
+      association[:order]
     end
     
     def to_params
-      super.merge(:association => @association.name, :assoc_id => parent_id)
+      super.merge(:association => @association[:name], :assoc_id => parent_id)
     end
     
     protected
     
     def iterate_model_associations(model)
       @constrained_fields = []
-      @constrained_fields << association.foreign_key.to_sym unless association.belongs_to?
-      model.reflect_on_all_associations.each do |current|
-        if !current.belongs_to? && association.foreign_key == current.association_foreign_key
-          constrained_fields << current.name.to_sym
-          @child_association = current if current.klass == @parent_model
+      @constrained_fields << association[:key] unless belongs_to?
+      model.association_reflections.each do |ass_name, ass_properties|
+        if !ass_properties[:type] == :many_to_one && association[:key] == ass_properties[:class_name].foreign_key
+          constrained_fields << ass_name
+          @child_association = ass_properties if ass_properties.associated_class == @parent_model
         end
-        if association.foreign_key == current.foreign_key
+        if association[:key] == ass_properties[:key]
           # show columns for has_many and has_one child associationes
-          constrained_fields << current.name.to_sym if current.belongs_to?
-          @child_association = current if current.klass == @parent_model
+          constrained_fields << ass_name if ass_properties[:type] == :many_to_one
+          @child_association = ass_properties if ass_properties.associated_class == @parent_model
         end
       end
     end
