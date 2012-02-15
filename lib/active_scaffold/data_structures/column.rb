@@ -276,20 +276,16 @@ module ActiveScaffold::DataStructures
       @send_form_on_update_column = self.class.send_form_on_update_column
       @actions_for_association_links = self.class.actions_for_association_links.clone if @association
       
-      self.number = @column.try(:number?)
+      self.number = (@column and (@column[:type] == :integer or @column[:type] == :float or @column[:type] == :decimal))
       @options = {:format => :i18n_number} if self.number?
       @form_ui = :checkbox if @column and @column.type == :boolean
-      @form_ui = :textarea if @column and @column.type == :text
+      @form_ui = :textarea if @column and @column.type == :string and (@column[:db_type] == 'text' or ((mc = @column[:max_chars]) and mc > 255))
       @allow_add_existing = true
       @form_ui = self.class.association_form_ui if @association && self.class.association_form_ui
       
       # default all the configurable variables
       self.css_class = ''
-      self.required = active_record_class.validators_on(self.name).any? do |val|
-        ActiveModel::Validations::PresenceValidator === val or (
-          ActiveModel::Validations::InclusionValidator === val and not val.options[:allow_nil] and not val.options[:allow_blank]
-        )
-      end
+      self.required = (@column[:default].nil? and not @column[:allow_null])
       self.sort = true
       self.search_sql = true
       
