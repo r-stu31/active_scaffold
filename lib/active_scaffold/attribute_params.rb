@@ -67,14 +67,14 @@ module ActiveScaffold
       end
 
       if parent_record.new_record?
-        parent_record.class.reflect_on_all_associations.each do |a|
-          next unless [:has_one, :has_many].include?(a.macro) and not (a.options[:through] || a.options[:finder_sql])
+        parent_record.class.association_reflections.each do |name, props|
+          next unless [:one_to_one, :one_to_many].include?(props[:type]) and props[:join_table].nil?
           next unless association_proxy = parent_record.send(a.name)
 
-          raise ActiveScaffold::ReverseAssociationRequired, "Association #{a.name} in class #{parent_record.class.name}: In order to support :has_one and :has_many where the parent record is new and the child record(s) validate the presence of the parent, ActiveScaffold requires the reverse association (the belongs_to)." unless a.reverse
+          raise ActiveScaffold::ReverseAssociationRequired, "Association #{props[:name]} in class #{parent_record.class.name}: In order to support :one_to_one and :one_to_many where the parent record is new and the child record(s) validate the presence of the parent, ActiveScaffold requires the reverse association (the many_to_one)." unless props.reciprocal
 
-          association_proxy = [association_proxy] if a.macro == :has_one
-          association_proxy.each { |record| record.send("#{a.reverse}=", parent_record) }
+          association_proxy = [association_proxy] if props[:type] == :one_to_one
+          association_proxy.each {|record| record.send("#{props.reciprocal}=", parent_record)}
         end
       end
 
@@ -85,7 +85,7 @@ module ActiveScaffold
       record = find_or_create_for_params(attributes, column, parent_record)
       if record
         record_columns = active_scaffold_config_for(column.association.klass).subform.columns
-        record_columns.constraint_columns = [column.association.reverse]
+        record_columns.constraint_columns = [column.association.reciprocal]
         update_record_from_params(record, record_columns, attributes)
         record.unsaved = true
       end

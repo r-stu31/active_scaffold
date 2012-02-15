@@ -33,11 +33,11 @@ class Sequel::Model
   # Otherwise the default behaviour of traversing all associations will be preserved.
   def associations_for_update
     if self.respond_to?( :scaffold_update_nofollow )
-      self.class.reflect_on_all_associations.reject { |association| self.scaffold_update_nofollow.include?( association.name ) }
+      self.class.association_reflections.reject {|name,props| self.scaffold_update_nofollow.include?(name)}
     elsif self.respond_to?( :scaffold_update_follow )
-      self.class.reflect_on_all_associations.select { |association| self.scaffold_update_follow.include?( association.name ) }
+      self.class.association_reflections.select {|name,props| self.scaffold_update_follow.include?(name)}
     else
-      self.class.reflect_on_all_associations
+      self.class.association_reflections
     end
   end
 

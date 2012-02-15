@@ -7,7 +7,7 @@ module ActiveScaffold::Actions
       base.module_eval do
         prepend_before_filter :set_nested
         before_filter :configure_nested
-        include ActiveScaffold::Actions::Nested::ChildMethods if active_scaffold_config.model.reflect_on_all_associations.any? {|a| a.macro == :has_and_belongs_to_many}
+        include ActiveScaffold::Actions::Nested::ChildMethods if active_scaffold_config.model.association_reflections.any? {|name,properties| properties[:type] == :many_to_many}
       end
       base.before_filter :include_habtm_actions
       base.helper_method :nested

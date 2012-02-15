@@ -10,7 +10,7 @@ module ActiveScaffold
 
     def set_active_scaffold_constraints
       associations_by_params = {}
-      active_scaffold_config.model.reflect_on_all_associations.each do |association|
+      active_scaffold_config.model.association_reflections.each do |name,association|
         associations_by_params[association[:class_name].foreign_key] = association[:name]
       end
       params.each do |key, value|
