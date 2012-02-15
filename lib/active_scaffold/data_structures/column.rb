@@ -275,7 +275,7 @@ module ActiveScaffold::DataStructures
     # instantiation is handled internally through the DataStructures::Columns object
     def initialize(name, active_record_class) #:nodoc:
       self.name = name
-      @column = active_record_class.columns_hash[self.name.to_s]
+      @column = active_record_class.db_schema[name]
       @association = active_record_class.reflect_on_association(self.name)
       @autolink = !@association.nil?
       @active_record_class = active_record_class

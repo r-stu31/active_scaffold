@@ -179,15 +179,15 @@ module ActiveScaffold
         parts = key.to_s.split('(')
         #old style date form management... ignore them too
         ignore_column_types = [:boolean, :datetime, :date, :time] if parts.length > 1
-        column_name = parts.first
-        column = klass.columns_hash[column_name]
+        column_name = parts.first.to_sym
+        column = klass.db_schema[column_name]
 
         # booleans and datetimes will always have a value. so we ignore them when checking whether the hash is empty.
         # this could be a bad idea. but the current situation (excess record entry) seems worse.
-        next true if column and ignore_column_types.include?(column.type)
+        next true if column and ignore_column_types.include?(column[:type])
 
         # defaults are pre-filled on the form. we can't use them to determine if the user intends a new row.
-        next true if column and value == column.default.to_s
+        next true if column and value == column[:ruby_default].to_s
 
         if value.is_a?(Hash)
           attributes_hash_is_empty?(value, klass)

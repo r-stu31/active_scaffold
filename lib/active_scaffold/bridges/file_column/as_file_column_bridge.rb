@@ -36,7 +36,9 @@ module ActiveScaffold::Config
       
       # set null to false so active_scaffold wont set it to null
       # delete_file_column will take care of deleting a file or not.
-      self.model.columns_hash[field.to_s].instance_variable_set("@null", false)
+      #
+      # XXX what a strange hack
+      #self.model.columns_hash[field.to_s].instance_variable_set("@null", false)
       
     rescue
       false
