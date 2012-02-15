@@ -144,7 +144,7 @@ module ActiveScaffold::Config
 
     # To be called after your finished configuration
     def _configure_sti
-      column = self.model.inheritance_column
+      column = self.model.respond_to?(:sti_key) ? self.model.sti_key : :type
       if sti_create_links
         self.columns[column].form_ui ||= :hidden
       else

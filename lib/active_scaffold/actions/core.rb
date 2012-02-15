@@ -160,11 +160,12 @@ module ActiveScaffold::Actions
 
     def new_model
       model = beginning_of_chain
-      if model.columns_hash[model.inheritance_column]
-        build_options = {model.inheritance_column.to_sym => active_scaffold_config.model_id} if nested? && nested.association && nested.association.collection?
-        params = self.params # in new action inheritance_column must be in params
-        params = params[:record] || {} unless params[model.inheritance_column] # in create action must be inside record key
-        model = params.delete(model.inheritance_column).camelize.constantize if params[model.inheritance_column]
+      if model.respond_to?(:sti_key)
+        build_options = {model.sti_key => active_scaffold_config.model_id} if nested? && nested.association && nested.association.collection?
+        sti_key = model.sti_key.to_s
+        params = self.params # in new action sti_key must be in params
+        params = params[:record] || {} unless params[sti_key] # in create action must be inside record key
+        model = params.delete(sti_key).camelize.constantize if params[sti_key]
       end
       model.respond_to?(:build) ? model.build(build_options || {}) : model.new
     end
