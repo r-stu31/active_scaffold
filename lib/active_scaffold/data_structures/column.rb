@@ -30,7 +30,7 @@ module ActiveScaffold::DataStructures
     # if left alone it will utilize human_attribute_name which includes localization
     attr_writer :label
     def label
-      as_(@label) || active_record_class.human_attribute_name(name.to_s)
+      as_(@label) || name.to_s.humanize
     end
 
     # a textual description of the column and its contents. this will be displayed with any associated form input widget, so you may want to consider adding a content example.
@@ -345,7 +345,7 @@ module ActiveScaffold::DataStructures
     def initialize_search_sql
       self.search_sql = unless self.virtual?
         if association.nil?
-          self.field.to_s
+          self.field
         else
           "#{association.associated_class.table_name}__#{association.associated_class.primary_key}".to_sym
         end
@@ -357,7 +357,7 @@ module ActiveScaffold::DataStructures
 
     # the table.field name for this column, if applicable
     def field
-      @field ||= [@active_record_class.connection.quote_table_name(@table), field_name].join('.')
+      @field ||= "#{@table}__#{field_name}".to_sym
     end
     
     def estimate_weight
