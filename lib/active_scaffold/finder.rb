@@ -1,9 +1,5 @@
 module ActiveScaffold
   module Finder
-    def self.like_operator
-      @@like_operator ||= ::Sequel::Model.connection.adapter_name == "PostgreSQL" ? "ILIKE" : "LIKE"
-    end
-
     module ClassMethods
       # Takes a collection of search terms (the tokens) and creates SQL that
       # searches all specified ActiveScaffold columns. A row will match if each
@@ -12,21 +8,19 @@ module ActiveScaffold
         # if there aren't any columns, then just return a nil condition
         return unless columns.length > 0
         like_pattern = like_pattern(text_search)
-
         tokens = [tokens] if tokens.is_a? String
+        obj = active_scaffold_config.model.new  # for typecasting purposes
 
-        where_clauses = []
-        columns.each do |column|
-          where_clauses << ((column.column.nil? || column.column.text?) ? "#{column.search_sql} #{ActiveScaffold::Finder.like_operator} ?" : "#{column.search_sql} = ?")
-        end
-        phrase = "(#{where_clauses.join(' OR ')})"
-
-        sql = ([phrase] * tokens.length).join(' AND ')
-        tokens = tokens.collect do |value|
-          columns.collect {|column| (column.column.nil? || column.column.text?) ? like_pattern.sub('?', value) : column.column.type_cast(value)}
-        end.flatten
-
-        [sql, *tokens]
+        tokens.collect do |token|
+          pattern = like_pattern.sub('?', token)
+          columns.collect do |column|
+            if column.column.nil? or column.column[:type] == :string
+              column.search_sql.ilike(pattern)
+            else
+              {column.search_sql => obj.send(:typecast_value, column.name, token)}
+            end
+          end.inject {|a,b| (a | b)}
+        end.inject {|a,b| (a & b)}
       end
 
       # Generates an SQL condition for the given ActiveScaffold column based on
@@ -38,7 +32,7 @@ module ActiveScaffold
           return self.send("condition_for_#{column.name}_column", column, value, like_pattern)
         end
         return unless column and column.search_sql and not value.blank?
-        search_ui = column.search_ui || column.column.try(:type)
+        search_ui = column.search_ui || (column.column and column.column[:type])
         begin
           if search_ui && self.respond_to?("condition_for_#{search_ui}_type")
             self.send("condition_for_#{search_ui}_type", column, value, like_pattern)
@@ -46,7 +40,7 @@ module ActiveScaffold
             unless column.search_sql.instance_of? Proc
               case search_ui
                 when :boolean, :checkbox
-                  ["#{column.search_sql} = ?", column.column.type_cast(value)]
+                  {column.search_sql => active_scaffold_config.model.db.send(:typecast_value_boolean, value)}
                 when :integer, :decimal, :float
                   condition_for_numeric(column, value)
                 when :string, :range
@@ -54,12 +48,12 @@ module ActiveScaffold
                 when :date, :time, :datetime, :timestamp
                   condition_for_datetime(column, value)
                 when :select, :multi_select, :country, :usa_state
-                ["#{column.search_sql} in (?)", Array(value)]
+                  {column.search_sql => Array(value)}
                 else
-                  if column.column.nil? || column.column.text?
-                    ["#{column.search_sql} #{ActiveScaffold::Finder.like_operator} ?", like_pattern.sub('?', value)]
+                  if column.column.nil? || column.column[:type] == :string
+                    column.search_sql.ilike(like_pattern.sub('?', value))
                   else
-                    ["#{column.search_sql} = ?", column.column.type_cast(value)]
+                    {column.search_sql => active_scaffold_config.model.new.send(:typecast_value, column.name, value)}
                   end
               end
             else
@@ -74,33 +68,33 @@ module ActiveScaffold
 
       def condition_for_numeric(column, value)
         if !value.is_a?(Hash)
-          ["#{column.search_sql} = ?", condition_value_for_numeric(column, value)]
+          {column.search_sql => condition_value_for_numeric(column, value)}
         elsif value[:from].blank? or not ActiveScaffold::Finder::NumericComparators.include?(value[:opt])
           nil
         elsif value[:opt] == 'BETWEEN'
-          ["#{column.search_sql} BETWEEN ? AND ?", condition_value_for_numeric(column, value[:from]), condition_value_for_numeric(column, value[:to])]
-         else
-          ["#{column.search_sql} #{value[:opt]} ?", condition_value_for_numeric(column, value[:from])]
+          {column.search_sql => condition_value_for_numeric(column, value[:from])..condition_value_for_numeric(column, value[:to])}
+        else
+          Sequel::SQL::PlaceholderLiteralString.new("? #{value[:opt]} ?", [column.search_sql, condition_value_for_numeric(column, value[:from])])
         end
       end
 
       def condition_for_range(column, value, like_pattern = nil)
         if !value.is_a?(Hash)
-          if column.column.nil? || column.column.text?
-            ["#{column.search_sql} #{ActiveScaffold::Finder.like_operator} ?", like_pattern.sub('?', value)]
+          if column.column.nil? || column.column[:type] == :string
+            column.search_sql.ilike(like_pattern.sub('?', value))
           else
-            ["#{column.search_sql} = ?", column.column.type_cast(value)]
+            {column.search_sql => active_scaffold_config.model.new.send(:typecast_value, column.name, value)}
           end
         elsif ActiveScaffold::Finder::NullComparators.include?(value[:opt])
           condition_for_null_type(column, value[:opt], like_pattern)
         elsif value[:from].blank?
           nil
         elsif ActiveScaffold::Finder::StringComparators.values.include?(value[:opt])
-          ["#{column.search_sql} #{ActiveScaffold::Finder.like_operator} ?", value[:opt].sub('?', value[:from])]
+          column.search_sql.ilike(value[:opt].sub('?', value[:from]))
         elsif value[:opt] == 'BETWEEN'
-          ["#{column.search_sql} BETWEEN ? AND ?", value[:from], value[:to]]
+          {column.search_sql => value[:from]..value[:to]}
         elsif ActiveScaffold::Finder::NumericComparators.include?(value[:opt])
-          ["#{column.search_sql} #{value[:opt]} ?", value[:from]]
+          Sequel::SQL::PlaceholderLiteralString.new("? #{value[:opt]} ?", [column.search_sql, value[:from]])
         else
           nil
         end
@@ -129,7 +123,7 @@ module ActiveScaffold
         case (column.search_ui || column.column.type)
         when :integer   then value.to_i rescue value ? 1 : 0
         when :float     then value.to_f
-        when :decimal   then ActiveRecord::ConnectionAdapters::Column.value_to_decimal(value)
+        when :decimal   then active_scaffold_config.model.db.send(:typecast_value_decimal, value)
         else
           value
         end
@@ -155,28 +149,24 @@ module ActiveScaffold
         if from_value.nil? and to_value.nil?
           nil
         elsif !from_value
-          ["#{column.search_sql} <= ?", to_value.to_s(:db)]
+          column.search_sql.sql_expr <= to_value.to_s(:db)
         elsif !to_value
-          ["#{column.search_sql} >= ?", from_value.to_s(:db)]
+          column.search_sql.sql_expr >= from_value.to_s(:db)
         else
-          ["#{column.search_sql} BETWEEN ? AND ?", from_value.to_s(:db), to_value.to_s(:db)]
+          {column.search_sql => from_value.to_s(:db)..to_value.to_s(:db)}
         end
       end
 
       def condition_for_record_select_type(column, value, like_pattern = nil)
-        if value.is_a?(Array)
-          ["#{column.search_sql} IN (?)", value]
-        else
-          ["#{column.search_sql} = ?", value]
-        end
+        {column.search_sql => value}
       end
       
       def condition_for_null_type(column, value, like_pattern = nil)
         case value.to_sym
         when :null
-          ["#{column.search_sql} is null"]
+          {column.search_sql => nil}
         when :not_null
-          ["#{column.search_sql} is not null"]
+          ~{column.search_sql => nil}
         else
           nil
         end
@@ -248,7 +238,7 @@ module ActiveScaffold
     # accomplishes this by checking model.#{action}_authorized?
     # TODO: this should reside on the model, not the controller
     def find_if_allowed(id, crud_type, klass = beginning_of_chain)
-      record = klass.find(id)
+      record = klass[id]
       raise ActiveScaffold::RecordNotAllowed, "#{klass} with id = #{id}" unless record.authorized_for?(:crud_type => crud_type.to_sym)
       return record
     end
@@ -321,14 +311,27 @@ module ActiveScaffold
     
     def append_to_query(query, options)
       options.assert_valid_keys :where, :select, :group, :order, :limit, :offset, :joins, :includes, :lock, :readonly, :from
+      offset = options.delete(:offset)
+      options.delete(:readonly)
       options.reject{|k, v| v.blank?}.inject(query) do |query, (k, v)|
         # default ordering of model has a higher priority than current queries ordering
         # fix this by removing existing ordering from arel
         if k.to_sym == :order
-          query = query.where('1=1') unless query.is_a?(ActiveRecord::Relation)
-          query = query.except(:order)
+          query = query.unordered
         end
-        query.send((k.to_sym), v) 
+        if k.to_sym == :limit
+          val = [v]
+          val << offset if offset
+          query.send(:limit, *val)
+        elsif k.to_sym == :includes
+          query.send(:eager, v)
+        elsif k.to_sym == :joins
+          query.send(:join, v)
+        elsif k.to_sym == :lock
+          query.send(:lock_style, (v == true ? :update : v))
+        else
+          query.send((k.to_sym), v)
+        end
       end
     end
 
@@ -342,16 +345,10 @@ module ActiveScaffold
           []
       end + active_scaffold_habtm_joins
     end
-    
+
     def merge_conditions(*conditions)
-      segments = []
-      conditions.each do |condition|
-        unless condition.blank?
-          sql = active_scaffold_config.model.send(:sanitize_sql, condition)
-          segments << sql unless sql.blank?
-        end
-      end
-      "(#{segments.join(') AND (')})" unless segments.empty?
+      segments = conditions.collect {|c| c unless c.blank?}.compact
+      segments.inject {|a,b| (a & b)}
     end
 
     # TODO: this should reside on the column, not the controller
