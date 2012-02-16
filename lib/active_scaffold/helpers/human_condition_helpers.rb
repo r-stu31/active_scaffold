@@ -26,10 +26,13 @@ module ActiveScaffold
           when :select, :multi_select, :record_select
             associated = value
             associated = [associated].compact unless associated.is_a? Array
-            associated = column.association.klass.where(["id in (?)", associated.map(&:to_i)]).collect(&:to_label) if column.association
+            if column.association
+              klass = column.association.associated_class
+              associated = column.association.associated_class.filter(klass.primary_key => associated.map(&:to_i)).collect(&:to_label)
+            end
             "#{column.active_record_class.human_attribute_name(column.name)} = #{associated.join(', ')}"
           when :boolean, :checkbox
-            label = column.column.type_cast(value) ? as_(:true) : as_(:false)
+            label = column.active_record_class.db.send(:typecast_value_boolean, value) ? as_(:true) : as_(:false)
             "#{column.active_record_class.human_attribute_name(column.name)} = #{label}"
           when :null
             "#{column.active_record_class.human_attribute_name(column.name)} #{as_(value.to_sym)}"

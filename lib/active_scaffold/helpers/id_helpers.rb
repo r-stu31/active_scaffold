@@ -74,7 +74,7 @@ module ActiveScaffold
       end
 
       def association_subform_id(column)
-        klass = column.association.klass.to_s.underscore
+        klass = column.association.associated_class.to_s.underscore
         clean_id "#{controller_id}-associated-#{klass}"
       end
 

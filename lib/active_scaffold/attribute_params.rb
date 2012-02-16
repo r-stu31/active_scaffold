@@ -84,7 +84,7 @@ module ActiveScaffold
     def manage_nested_record_from_params(parent_record, column, attributes)
       record = find_or_create_for_params(attributes, column, parent_record)
       if record
-        record_columns = active_scaffold_config_for(column.association.klass).subform.columns
+        record_columns = active_scaffold_config_for(column.association.associated_class).subform.columns
         record_columns.constraint_columns = [column.association.reciprocal]
         update_record_from_params(record, record_columns, attributes)
         record.unsaved = true
@@ -104,7 +104,7 @@ module ActiveScaffold
     def column_value_from_param_simple_value(parent_record, column, value)
       if column.singular_association?
         # it's a single id
-        column.association.klass.find(value) if value and not value.empty?
+        column.association.associated_class[value] if value and not value.empty?
       elsif column.plural_association?
         column_plural_assocation_value_from_value(column, value)
       elsif column.number? && [:i18n_number, :currency].include?(column.options[:format])
@@ -122,20 +122,26 @@ module ActiveScaffold
       # it's an array of ids
       if value and not value.empty?
         ids = value.select {|id| id.respond_to?(:empty?) ? !id.empty? : true}
-        ids.empty? ? [] : column.association.klass.find(ids)
+        if ids.empty?
+          []
+        else
+          klass = column.association.associated_class
+          klass.filter(klass.primary_key => ids)
+        end
       end
     end
 
     def column_value_from_param_hash_value(parent_record, column, value)
       # this is just for backwards compatibility. we should clean this up in 2.0.
       if column.form_ui == :select
-        ids = if column.singular_association?
+        klass = column.association.associated_class
+        if column.singular_association?
           value[:id]
+          value[:id].blank? ? nil : klass[value[:id]]
         else
-          value.values.collect {|hash| hash[:id]}
+          ids = (value.values.collect {|hash| hash[:id]})
+          ids.blank? ? nil : klass.filter(klass.primary_key => ids)
         end
-        (ids and not ids.empty?) ? column.association.klass.find(ids) : nil
-
       elsif column.singular_association?
         manage_nested_record_from_params(parent_record, column, value)
       elsif column.plural_association?
@@ -150,7 +156,7 @@ module ActiveScaffold
     # otherwise it will build a new one.
     def find_or_create_for_params(params, parent_column, parent_record)
       current = parent_record.send(parent_column.name)
-      klass = parent_column.association.klass
+      klass = parent_column.association.associated_class
       pk = klass.primary_key.to_sym
       return nil if parent_column.show_blank_record?(current) and attributes_hash_is_empty?(params, klass)
 
@@ -164,7 +170,7 @@ module ActiveScaffold
           current.detect {|o| o.id.to_s == pk_val}
         # attaching an existing but not-current object
         else
-          klass.find(pk_val)
+          klass[pk_val]
         end
       else
         build_associated(parent_column, parent_record) if klass.authorized_for?(:crud_type => :create)

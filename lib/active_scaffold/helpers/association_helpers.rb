@@ -3,13 +3,13 @@ module ActiveScaffold
     module AssociationHelpers
       # Provides a way to honor the :conditions on an association while searching the association's klass
       def association_options_find(association, conditions = nil)
-        relation = association.klass.where(conditions).where(association.options[:conditions])
-        relation = relation.includes(association.options[:include]) if association.options[:include]
+        relation = association.associated_class.where(conditions).where(association.options[:conditions])
+        relation = relation.eager(association.options[:include]) if association.options[:include]
         relation.all
       end
 
       def association_options_count(association, conditions = nil)
-        association.klass.where(conditions).where(association.options[:conditions]).count
+        association.associated_class.where(conditions).where(association.options[:conditions]).count
       end
 
       # returns options for the given association as a collection of [id, label] pairs intended for the +options_for_select+ helper.
@@ -31,7 +31,7 @@ module ActiveScaffold
         case association.macro
           when :has_one, :has_many
             # Find only orphaned objects
-            "#{association.foreign_key} IS NULL"
+            "#{association[:class_name].foreign_key} IS NULL"
           when :belongs_to, :has_and_belongs_to_many
             # Find all
             nil

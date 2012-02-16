@@ -215,7 +215,7 @@ module ActiveScaffold
       end
 
       def override_subform_partial(column, subform_partial)
-        File.join(active_scaffold_controller_for(column.association.klass).controller_path, subform_partial) if column_renders_as(column) == :subform
+        File.join(active_scaffold_controller_for(column.association.associated_class).controller_path, subform_partial) if column_renders_as(column) == :subform
       end
 
       def override_form_field_partial?(column)
@@ -264,7 +264,7 @@ module ActiveScaffold
       end
 
       def subform_partial_for_column(column)
-        subform_partial = "#{active_scaffold_config_for(column.association.klass).subform.layout}_subform"
+        subform_partial = "#{active_scaffold_config_for(column.association.associated_class).subform.layout}_subform"
         if override_subform_partial?(column, subform_partial)
           override_subform_partial(column, subform_partial)
         else
@@ -281,7 +281,7 @@ module ActiveScaffold
           return :subsection
         elsif column.active_record_class.locking_column.to_s == column.name.to_s or column.form_ui == :hidden
           return :hidden
-        elsif column.association.nil? or column.form_ui or !active_scaffold_config_for(column.association.klass).actions.include?(:subform)
+        elsif column.association.nil? or column.form_ui or !active_scaffold_config_for(column.association.associated_class).actions.include?(:subform)
           return :field
         else
           return :subform
