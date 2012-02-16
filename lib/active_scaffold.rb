@@ -187,9 +187,6 @@ module ActiveScaffold
       self.active_scaffold_config._configure_sti unless self.active_scaffold_config.sti_children.nil?
       self.active_scaffold_config._load_action_columns
 
-      # defines the attribute read methods on the model, so record.send() doesn't find protected/private methods instead
-      klass = self.active_scaffold_config.model
-      klass.define_attribute_methods unless klass.attribute_methods_generated?
       # include the rest of the code into the controller: the action core and the included actions
       module_eval do
         include ActiveScaffold::Finder
@@ -250,7 +247,7 @@ module ActiveScaffold
         if options.include?(:controller)
           "#{options[:controller].to_s.camelize}Controller".constantize
         else
-          active_scaffold_controller_for(column.association.klass)
+          active_scaffold_controller_for(column.association.associated_class)
         end
       rescue ActiveScaffold::ControllerNotFound
         nil        
@@ -263,7 +260,7 @@ module ActiveScaffold
       unless controller.nil?
         options.reverse_merge! :label => column.label, :position => :after, :type => :member, :controller => controller.controller_path, :column => column
         options[:parameters] ||= {}
-        options[:parameters].reverse_merge! :parent_scaffold => controller_path, :association => column.association.name
+        options[:parameters].reverse_merge! :parent_scaffold => controller_path, :association => column.association[:name]
         if column.plural_association?
           # note: we can't create nested scaffolds on :through associations because there's no reverse association.
           
