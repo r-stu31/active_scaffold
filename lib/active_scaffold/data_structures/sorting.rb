@@ -2,7 +2,7 @@ module ActiveScaffold::DataStructures
   # encapsulates the column sorting configuration for the List view
   class Sorting
     def initialize(columns)
-      # array of ActiveScaffold::DataStructures::Column instances
+      # a ActiveScaffold::DataStructures::Columns instance
       @columns = columns
 
       # @clauses is an array of priplets: [[column, order, params], ...]
@@ -38,13 +38,13 @@ module ActiveScaffold::DataStructures
     
     # add a clause to the sorting, assuming the column is sortable
     def add(order, params = nil)
-      params = extract_order_params(clause) unless params
+      params = extract_order_params(order) unless params
       column = get_column(params[:column])
-      raise ArgumentError, "Could not find column #{column_name}" if column.nil?
+      raise ArgumentError, "Could not find column #{params[:column]} for #{order.inspect}" if column.nil?
       if column.sortable?
         @mutex.synchronize do
           @clauses << [column, order, params]
-          @cindex[params[:column]] = @clauses.last - 1
+          @cindex[params[:column]] = @clauses.count - 1
         end
       end
       raise ArgumentError, "Can't mix :method- and :sql-based sorting" if mixed_sorting?
@@ -70,12 +70,12 @@ module ActiveScaffold::DataStructures
     end
 
     def direction_of(column)
-      clause = @mutex.synchronize do
+      c = @mutex.synchronize do
         i = @cindex[(column.respond_to?(:name) ? column.name : column)]
         @clauses[i] if i
       end
-      if clause
-        clause[2][:descending] ? 'DESC' : 'ASC'
+      if c
+        c[2][:descending] ? 'DESC' : 'ASC'
       end
     end
 
@@ -136,9 +136,9 @@ module ActiveScaffold::DataStructures
     def get_table_column(tcol)
       table, column = tcol.to_s.split('__')
       if column
-        [table, column]
+        [table.to_sym, column.to_sym]
       else
-        [nil, table]
+        [nil, table.to_sym]
       end
     end
 
