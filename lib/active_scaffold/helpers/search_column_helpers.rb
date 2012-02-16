@@ -30,16 +30,16 @@ module ActiveScaffold
 
           else # regular model attribute column
             # if we (or someone else) have created a custom render option for the column type, use that
-            if override_search?(column.column.type)
-              send(override_search(column.column.type), column, options)
+            if override_search?(column.column[:type])
+              send(override_search(column.column[:type]), column, options)
             # if we (or someone else) have created a custom render option for the column type, use that
-            elsif override_input?(column.column.type)
-              send(override_input(column.column.type), column, options)
+            elsif override_input?(column.column[:type])
+              send(override_input(column.column[:type]), column, options)
             # final ultimate fallback: use rails' generic input method
             else
               # for textual fields we pass different options
               text_types = [:text, :string, :integer, :float, :decimal]
-              options = active_scaffold_input_text_options(options) if text_types.include?(column.column.type)
+              options = active_scaffold_input_text_options(options) if text_types.include?(column.column[:type])
               text_field(:record, column.name, options.merge(column.options))
             end
           end

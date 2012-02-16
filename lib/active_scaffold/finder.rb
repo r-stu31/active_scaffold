@@ -120,7 +120,7 @@ module ActiveScaffold
       def condition_value_for_numeric(column, value)
         return value if value.nil?
         value = i18n_number_to_native_format(value) if [:i18n_number, :currency].include?(column.options[:format])
-        case (column.search_ui || column.column.type)
+        case (column.search_ui || column.column[:type])
         when :integer   then value.to_i rescue value ? 1 : 0
         when :float     then value.to_f
         when :decimal   then active_scaffold_config.model.db.send(:typecast_value_decimal, value)
@@ -142,7 +142,7 @@ module ActiveScaffold
       end
             
       def condition_for_datetime(column, value, like_pattern = nil)
-        conversion = column.column.type == :date ? :to_date : :to_time
+        conversion = column.column[:type] == :date ? :to_date : :to_time
         from_value = condition_value_for_datetime(value[:from], conversion)
         to_value = condition_value_for_datetime(value[:to], conversion)
 

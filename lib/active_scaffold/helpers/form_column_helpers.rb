@@ -36,18 +36,18 @@ module ActiveScaffold
 
             else # regular model attribute column
               # if we (or someone else) have created a custom render option for the column type, use that
-              if override_input?(column.column.type)
-                send(override_input(column.column.type), column, options)
+              if override_input?(column.column[:type])
+                send(override_input(column.column[:type]), column, options)
               # final ultimate fallback: use rails' generic input method
               else
                 # for textual fields we pass different options
                 text_types = [:text, :string, :integer, :float, :decimal, :date, :time, :datetime]
-                options = active_scaffold_input_text_options(options) if text_types.include?(column.column.type)
-                if column.column.type == :string && options[:maxlength].blank?
+                options = active_scaffold_input_text_options(options) if text_types.include?(column.column[:type])
+                if column.column[:type] == :string && options[:maxlength].blank?
                   options[:maxlength] = column.column.limit
                   options[:size] ||= ActionView::Helpers::InstanceTag::DEFAULT_FIELD_OPTIONS["size"]
                 end
-                options[:include_blank] = true if column.column.null and [:date, :datetime, :time].include?(column.column.type)
+                options[:include_blank] = true if column.column.null and [:date, :datetime, :time].include?(column.column[:type])
                 options[:value] = format_number_value(@record.send(column.name), column.options) if column.number?
                 text_field(:record, column.name, options.merge(column.options))
               end

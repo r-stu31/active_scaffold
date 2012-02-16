@@ -62,7 +62,7 @@ module ActiveScaffold
           end
           
           def column_datetime?(column)
-            (!column.column.nil? && [:datetime, :time].include?(column.column.type))
+            (!column.column.nil? && [:datetime, :time].include?(column.column[:type]))
           end
         end
 
@@ -120,7 +120,7 @@ module ActiveScaffold
             end
             
             def date_bridge_from_to(column, value)
-              conversion = column.column.type == :date ? :to_date : :to_time
+              conversion = column.column[:type] == :date ? :to_date : :to_time
               case value[:opt]
               when 'RANGE'
                 date_bridge_from_to_for_range(column, value).collect(&conversion)
@@ -190,7 +190,7 @@ module ActiveScaffold
               if [:date_picker, :datetime_picker].include? column.form_ui
                 column.form_ui == :date_picker
               else
-                (!column.column.nil? && [:date].include?(column.column.type))
+                (!column.column.nil? && [:date].include?(column.column[:type]))
               end
             end
           end
