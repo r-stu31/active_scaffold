@@ -78,7 +78,7 @@ module ActiveScaffold::Actions
     def beginning_of_chain
       if nested? && nested.association && !nested.association.belongs_to?
         if nested.association.collection?
-          nested.parent_scope.send(nested.association.name)
+          nested.parent_scope.send(nested.association[:name])
         elsif nested.child_association.belongs_to?
           active_scaffold_config.model.where(nested.child_association.foreign_key => nested.parent_scope)
         end
@@ -99,11 +99,11 @@ module ActiveScaffold::Actions
           parent = nested_parent_record(:read)
           case nested.child_association.macro
           when :has_one
-            record.send("#{nested.child_association.name}=", parent)
+            record.send("#{nested.child_association[:name]}=", parent)
           when :belongs_to
-            record.send("#{nested.child_association.name}=", parent)
+            record.send("#{nested.child_association[:name]}=", parent)
           when :has_many, :has_and_belongs_to_many
-            record.send("#{nested.child_association.name}").send(:<<, parent)
+            record.send("#{nested.child_association[:name]}").send(:<<, parent)
           end unless parent.nil?
         end
       end
@@ -214,7 +214,7 @@ module ActiveScaffold::Actions::Nested
       parent_record = nested_parent_record(:update)
       @record = active_scaffold_config.model.find(params[:associated_id])
       if parent_record && @record
-        parent_record.send(nested.association.name) << @record
+        parent_record.send(nested.association[:name]) << @record
         parent_record.save
       else
         false
@@ -224,7 +224,7 @@ module ActiveScaffold::Actions::Nested
     def do_destroy_existing
       if active_scaffold_config.nested.shallow_delete
         @record = nested_parent_record(:update)
-        collection = @record.send(nested.association.name)
+        collection = @record.send(nested.association[:name])
         assoc_record = collection.find(params[:id])
         collection.delete(assoc_record)
       else

@@ -98,7 +98,7 @@ module ActiveScaffold
       ##
 
       def active_scaffold_input_singular_association(column, html_options)
-        associated = @record.send(column.association.name)
+        associated = @record.send(column.association[:name])
 
         select_options = options_for_association(column.association)
         select_options.unshift([ associated.to_label, associated.id ]) unless associated.nil? or select_options.find {|label, id| id == associated.id}
@@ -114,7 +114,7 @@ module ActiveScaffold
       end
 
       def active_scaffold_input_plural_association(column, options)
-        associated_options = @record.send(column.association.name).collect {|r| [r.to_label, r.id]}
+        associated_options = @record.send(column.association[:name]).collect {|r| [r.to_label, r.id]}
         select_options = associated_options | options_for_association(column.association)
         return content_tag(:span, as_(:no_options), :class => options[:class], :id => options[:id]) if select_options.empty?
 

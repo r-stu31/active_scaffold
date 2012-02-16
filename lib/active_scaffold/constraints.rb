@@ -100,7 +100,7 @@ module ActiveScaffold
       elsif [:many_to_many].include?(association[:type])
         association[:class_name].foreign_key
       else
-        association.name.to_s.foreign_key
+        association[:name].to_s.foreign_key
       end
 
       table = case association[:type]
