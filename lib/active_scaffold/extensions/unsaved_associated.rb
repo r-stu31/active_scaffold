@@ -12,7 +12,7 @@ class Sequel::Model
   end
 
   def save_associated!
-    save_associated or raise(ActiveRecord::RecordNotSaved)
+    save_associated or raise(Sequel::Error)
   end
 
   def no_errors_in_associated?
@@ -33,11 +33,11 @@ class Sequel::Model
   # Otherwise the default behaviour of traversing all associations will be preserved.
   def associations_for_update
     if self.respond_to?( :scaffold_update_nofollow )
-      self.class.association_reflections.reject {|name,props| self.scaffold_update_nofollow.include?(name)}
+      self.class.associations.reject {|association| self.scaffold_update_nofollow.include?(association)}
     elsif self.respond_to?( :scaffold_update_follow )
-      self.class.association_reflections.select {|name,props| self.scaffold_update_follow.include?(name)}
+      self.class.associations.select {|association| self.scaffold_update_follow.include?(association)}
     else
-      self.class.association_reflections
+      self.class.associations
     end
   end
 
@@ -48,9 +48,8 @@ class Sequel::Model
   # returns true otherwise, even when none of the associations have been instantiated. build wrapper methods accordingly.
   def with_unsaved_associated
     associations_for_update.all? do |association|
-      association_proxy = send(association.name)
-      if association_proxy
-        records = association_proxy
+      records = send(association)
+      if records
         records = [records] unless records.is_a? Array # convert singular associations into collections for ease of use
         records.select {|r| r.unsaved? and not r.readonly?}.all? {|r| yield r} # must use select instead of find_all, which Rails overrides on association proxies for db access
       else
