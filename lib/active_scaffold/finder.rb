@@ -314,12 +314,12 @@ module ActiveScaffold
       offset = options.delete(:offset)
       options.delete(:readonly)
       options.reject{|k, v| v.blank?}.inject(query) do |query, (k, v)|
-        # default ordering of model has a higher priority than current queries ordering
-        # fix this by removing existing ordering from arel
         if k.to_sym == :order
+          # default ordering of model has a higher priority than current queries ordering
+          # fix this by removing existing ordering from arel
           query = query.unordered
-        end
-        if k.to_sym == :limit
+          query.send(:order, *v)
+        elsif k.to_sym == :limit
           val = [v]
           val << offset if offset
           query.send(:limit, *val)

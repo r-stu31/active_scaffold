@@ -1,24 +1,33 @@
 module ActiveScaffold::DataStructures
   # encapsulates the column sorting configuration for the List view
   class Sorting
-    include Enumerable
-
     def initialize(columns)
+      # array of ActiveScaffold::DataStructures::Column instances
       @columns = columns
+
+      # @clauses is an array of priplets: [[column, order, params], ...]
+      # where 'column' is a ActiveScaffold::DataStructures::Column instance,
+      # 'order' is Sequel::SQL::OrderedExpression or symbol - both suitable as arguments to Sequel::Dataset#order method
+      # and params is a hash with :table, :column, :descending keys
       @clauses = []
+
+      # hash: 'column name'.to_sym => 'index to @clauses array'.to_i
+      @cindex = {}
+
+      # synchronize access to @cindex and @clauses
+      @mutex = Mutex.new
     end
     
     def set_default_sorting(model)
-      model_scope = model.send(:build_default_scope)
-      order_clause = model_scope.arel.order_clauses.join(",") if model_scope
+      order_clauses = model.dataset.opts[:order]
 
       # If an ORDER BY clause is found set default sorting according to it, else
       # fallback to setting primary key ordering
-      if order_clause
-        set_sorting_from_order_clause(order_clause, model.table_name)
+      if order_clauses
+        set_sorting_from_order_clause(order_clauses, model.table_name)
         @default_sorting = true
       else
-        set(model.primary_key, 'ASC') if model.column_names.include?(model.primary_key)
+        set(model.primary_key) if model.primary_key
       end
     end
 
@@ -28,31 +37,31 @@ module ActiveScaffold::DataStructures
     end
     
     # add a clause to the sorting, assuming the column is sortable
-    def add(column_name, direction = nil)
-      direction ||= 'ASC'
-      direction = direction.to_s.upcase
-      column = get_column(column_name)
+    def add(order, params = nil)
+      params = extract_order_params(clause) unless params
+      column = get_column(params[:column])
       raise ArgumentError, "Could not find column #{column_name}" if column.nil?
-      raise ArgumentError, "Sorting direction unknown" unless [:ASC, :DESC].include? direction.to_sym
-      @clauses << [column, direction.untaint] if column.sortable?
+      if column.sortable?
+        @mutex.synchronize do
+          @clauses << [column, order, params]
+          @cindex[params[:column]] = @clauses.last - 1
+        end
+      end
       raise ArgumentError, "Can't mix :method- and :sql-based sorting" if mixed_sorting?
     end
 
-    # an alias for +add+. must accept its arguments in a slightly different form, though.
-    def <<(arg)
-      add(*arg)
-    end
-
-    # clears the sorting before setting to the given column/direction
     def set(*args)
       clear
-      add(*args)
+      args.each {|a| add(a)}
     end
 
     # clears the sorting
     def clear
-      @default_sorting = false
-      @clauses = []
+      @mutex.synchronize do
+        @default_sorting = false
+        @clauses = []
+        @cindex = {}
+      end
     end
 
     # checks whether the given column (a Column object or a column name) is in the sorting
@@ -61,9 +70,13 @@ module ActiveScaffold::DataStructures
     end
 
     def direction_of(column)
-      clause = get_clause(column)
-      return if clause.nil?
-      clause[1]
+      clause = @mutex.synchronize do
+        i = @cindex[(column.respond_to?(:name) ? column.name : column)]
+        @clauses[i] if i
+      end
+      if clause
+        clause[2][:descending] ? 'DESC' : 'ASC'
+      end
     end
 
     # checks whether any column is configured to sort by method (using a proc)
@@ -75,11 +88,6 @@ module ActiveScaffold::DataStructures
       @clauses.any? { |sorting| sorting[0].sort.is_a? Hash and sorting[0].sort.has_key? :sql }
     end
 
-    # iterate over the clauses
-    def each
-      @clauses.each { |clause| yield clause }
-    end
-
     # provides quick access to the first (and sometimes only) clause
     def first
       @clauses.first
@@ -88,25 +96,17 @@ module ActiveScaffold::DataStructures
     # builds an order-by clause
     def clause
       return nil if sorts_by_method? || default_sorting?
-
-      # unless the sorting is by method, create the sql string
-      order = []
-      each do |sort_column, sort_direction|
-        sql = sort_column.sort[:sql]
-        next if sql.nil? or sql.empty?
-
-        order << "#{sql} #{sort_direction}"
-      end
-
-      order.join(', ') unless order.empty?
+      @clauses.collect {|c| c[0].sort[:sql]}.compact
     end
 
     protected
 
     # retrieves the sorting clause for the given column
     def get_clause(column)
-      column = get_column(column)
-      @clauses.find{ |clause| clause[0] == column}
+      @mutex.synchronize do
+        i = @cindex[(column.respond_to?(:name) ? column.name : column)]
+        @clauses[i] if i
+      end
     end
 
     # possibly converts the given argument into a column object from @columns (if it's not already)
@@ -114,7 +114,6 @@ module ActiveScaffold::DataStructures
       # it's a column
       return name_or_column if name_or_column.is_a? ActiveScaffold::DataStructures::Column
       # it's a name
-      name_or_column = name_or_column.to_s.split('.').last if name_or_column.to_s.include? '.'
       return @columns[name_or_column]
     end
 
@@ -126,43 +125,42 @@ module ActiveScaffold::DataStructures
       @default_sorting
     end
 
-    def set_sorting_from_order_clause(order_clause, model_table_name = nil)
+    def set_sorting_from_order_clause(order_clauses, model_table_name = nil)
       clear
-      order_clause.to_s.split(',').each do |criterion|
-        unless criterion.blank?
-          order_parts = extract_order_parts(criterion)
-          add(order_parts[:column_name], order_parts[:direction]) unless different_table?(model_table_name, order_parts[:table_name])
-        end
+      order_clauses.each do |criterion|
+        params = extract_order_params(criterion)
+        add(criterion, params) unless different_table?(model_table_name, params[:table])
       end
     end
     
-    def extract_order_parts(criterion_parts)
-      column_name_part, direction_part = criterion_parts.strip.split(' ')
-      column_name_parts = column_name_part.split('.')
-      order = {:direction => extract_direction(direction_part),
-        :column_name => remove_quotes(column_name_parts.last)}
-      order[:table_name] = remove_quotes(column_name_parts[-2]) if column_name_parts.length >= 2
-      order
+    def get_table_column(tcol)
+      table, column = tcol.to_s.split('__')
+      if column
+        [table, column]
+      else
+        [nil, table]
+      end
+    end
+
+    def extract_order_params(criterion)
+      if criterion.respond_to?(:expression) and criterion.respond_to?(:descending)  # Sequel::SQL::OrderedExpression
+        expression = criterion.expression
+        if expression.respond_to?(:table) and expression.respond_to?(:column)  # Sequel::SQL::QualifiedIdentifier
+          table = expression.table
+          column = expression.column
+        else
+          table, column = get_table_column(expression)
+        end
+        descending = criterion.descending
+      else
+        table, column = get_table_column(criterion)
+        descending = false
+      end
+      {:table => table, :column => column, :descending => descending}
     end
     
     def different_table?(model_table_name, order_table_name)
-      !order_table_name.nil? && model_table_name != order_table_name
-    end
-    
-    def remove_quotes(sql_name)
-      if sql_name.starts_with?('"') || sql_name.starts_with?('`')
-        sql_name[1, (sql_name.length - 2)]
-      else
-        sql_name
-      end
-    end
-    
-    def extract_direction(direction_part)
-      if direction_part.to_s.upcase == 'DESC'
-        'DESC'
-      else
-        'ASC'
-      end
+      model_table_name and order_table_name and model_table_name != order_table_name
     end
   end
 end

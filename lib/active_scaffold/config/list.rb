@@ -86,9 +86,7 @@ module ActiveScaffold::Config
 
     # the default sorting. should be an array of hashes of {column_name => direction}, e.g. [{:a => 'desc'}, {:b => 'asc'}]. to just sort on one column, you can simply provide a hash, though, e.g. {:a => 'desc'}.
     def sorting=(val)
-      val = [val] if val.is_a? Hash
-      sorting.clear
-      val.each { |clause| sorting.add *Array(clause).first }
+      sorting.set(*val)
     end
     def sorting
       @sorting ||= ActiveScaffold::DataStructures::Sorting.new(@core.columns)
@@ -174,12 +172,12 @@ module ActiveScaffold::Config
 
       def sorting
         # we want to store as little as possible in the session, but we want to return a Sorting data structure. so we recreate it each page load based on session data.
-        @session['sort'] = [@params['sort'], @params['sort_direction']] if @params['sort'] and @params['sort_direction']
+        @session['sort'] = [@params['sort'].to_sym, @params['sort_direction'] == 'DESC'] if @params['sort'] and @params['sort_direction']
         @session['sort'] = nil if @params['sort_direction'] == 'reset'
 
         if @session['sort']
           sorting = @conf.sorting.clone
-          sorting.set(*@session['sort'])
+          sorting.set(@session['sort'][1] ? @session['sort'][0].desc : @session['sort'][0])
           return sorting
         else
           return default_sorting
