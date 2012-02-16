@@ -159,11 +159,11 @@ module ActiveScaffold
 
       def get_action_link_id(url_options, record = nil, column = nil)
         id = url_options[:id] || url_options[:parent_id]
-        id = "#{column.association.name}-#{record.id}" if column && column.plural_association?
-        if record.try(column.association.name.to_sym).present?
-          id = "#{column.association.name}-#{record.send(column.association.name).id}-#{record.id}"
+        id = "#{column.association[:name]}-#{record.id}" if column && column.plural_association?
+        if record.try(column.association[:name]).present?
+          id = "#{column.association[:name]}-#{record.send(column.association[:name]).id}-#{record.id}"
         else
-          id = "#{column.association.name}-#{record.id}" unless record.nil?
+          id = "#{column.association[:name]}-#{record.id}" unless record.nil?
         end if column && column.singular_association?
         id = "#{id}-#{url_options[:batch_scope].downcase}" if url_options[:batch_scope]
         action_id = "#{id_from_controller(url_options[:controller]) + '-' if url_options[:parent_controller]}#{url_options[:action].to_s}"
@@ -185,8 +185,8 @@ module ActiveScaffold
       
       def url_options_for_nested_link(column, record, link, url_options, options = {})
         if column && column.association 
-          url_options[column.association.active_record.name.foreign_key.to_sym] = url_options.delete(:id)
-          url_options[:id] = record.send(column.association.name).id if column.singular_association? && record.send(column.association.name).present?
+          url_options[column.association[:model].name.foreign_key.to_sym] = url_options.delete(:id)
+          url_options[:id] = record.send(column.association[:name]).id if column.singular_association? && record.send(column.association[:name]).present?
         elsif link.parameters && link.parameters[:named_scope]
           url_options[active_scaffold_config.model.name.foreign_key.to_sym] = url_options.delete(:id)
         end
@@ -219,7 +219,7 @@ module ActiveScaffold
          
         classes << 'empty' if column_empty? column_value
         classes << 'sorted' if active_scaffold_config.list.user.sorting.sorts_on?(column)
-        classes << 'numeric' if column.column and [:decimal, :float, :integer].include?(column.column.type)
+        classes << 'numeric' if column.number?
         classes.join(' ').rstrip
       end
       

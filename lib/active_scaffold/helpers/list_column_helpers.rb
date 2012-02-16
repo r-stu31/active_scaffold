@@ -14,8 +14,8 @@ module ActiveScaffold
           # second, check if the dev has specified a valid list_ui for this column
           elsif column.list_ui and override_column_ui?(column.list_ui)
             send(override_column_ui(column.list_ui), column, record)
-          elsif column.column and override_column_ui?(column.column.type)
-            send(override_column_ui(column.column.type), column, record)
+          elsif column.column and override_column_ui?(column.column[:type])
+            send(override_column_ui(column.column[:type]), column, record)
           else
             format_column_value(record, column)
           end
@@ -33,7 +33,7 @@ module ActiveScaffold
       def render_list_column(text, column, record)
         if column.link
           link = column.link
-          associated = record.send(column.association.name) if column.association
+          associated = record.send(column.association[:name]) if column.association
           url_options = params_for(:action => nil, :id => record.id)
 
           # setup automatic link
@@ -85,7 +85,7 @@ module ActiveScaffold
       def column_link_authorized?(link, column, record, associated)
         if column.association
           associated_for_authorized = if associated.nil? || (associated.respond_to?(:blank?) && associated.blank?)
-            column.association.klass
+            column.association.associated_class
           elsif column.plural_association?
             associated.first
           else
@@ -151,7 +151,6 @@ module ActiveScaffold
         value ||= record.send(column.name) unless record.nil?
         if value && column.association # cache association size before calling column_empty?
           associated_size = value.size if column.plural_association? and column.associated_number? # get count before cache association
-          cache_association(value, column) if column.plural_association?
         end
         if column.association.nil? or column_empty?(value)
           if column.form_ui == :select && column.options[:options]
@@ -219,18 +218,6 @@ module ActiveScaffold
         clean_column_value(value)
       end
 
-      def cache_association(value, column)
-        # we are not using eager loading, cache firsts records in order not to query the database in a future
-        unless value.loaded?
-          # load at least one record, is needed for column_empty? and checking permissions
-          if column.associated_limit.nil?
-            Rails.logger.warn "ActiveScaffold: Enable eager loading for #{column.name} association to reduce SQL queries"
-          else
-            value.target = value.find(:all, :limit => column.associated_limit + 1, :select => column.select_columns)
-          end
-        end
-      end
-
       # ==========
       # = Inline Edit =
       # ==========
@@ -244,7 +231,7 @@ module ActiveScaffold
       end
 
       def inplace_edit_cloning?(column)
-         column.inplace_edit != :ajax and (override_form_field?(column) or column.form_ui or (column.column and override_input?(column.column.type)))
+         column.inplace_edit != :ajax and (override_form_field?(column) or column.form_ui or (column.column and override_input?(column.column[:type])))
       end
 
       def active_scaffold_inplace_edit(record, column, options = {})

@@ -278,8 +278,8 @@ module ActiveScaffold::DataStructures
       
       self.number = (@column and (@column[:type] == :integer or @column[:type] == :float or @column[:type] == :decimal))
       @options = {:format => :i18n_number} if self.number?
-      @form_ui = :checkbox if @column and @column.type == :boolean
-      @form_ui = :textarea if @column and @column.type == :string and (@column[:db_type] == 'text' or ((mc = @column[:max_chars]) and mc > 255))
+      @form_ui = :checkbox if @column and @column[:type] == :boolean
+      @form_ui = :textarea if @column and @column[:type] == :string and (@column[:db_type] == 'text' or ((mc = @column[:max_chars]) and mc > 255))
       @allow_add_existing = true
       @form_ui = self.class.association_form_ui if @association && self.class.association_form_ui
       
