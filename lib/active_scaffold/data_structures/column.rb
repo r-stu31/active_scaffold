@@ -285,7 +285,7 @@ module ActiveScaffold::DataStructures
       
       # default all the configurable variables
       self.css_class = ''
-      self.required = (@column[:default].nil? and not @column[:allow_null])
+      self.required = (@column and @column[:default].nil? and not @column[:allow_null])
       self.sort = true
       self.search_sql = true
       
