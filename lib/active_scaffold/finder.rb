@@ -326,7 +326,10 @@ module ActiveScaffold
         elsif k.to_sym == :includes
           query.send(:eager, v)
         elsif k.to_sym == :joins
-          query.send(:join, v)
+          v.each do |j|
+            query = query.send(:join, *j)
+          end
+          query
         elsif k.to_sym == :lock
           query.send(:lock_style, (v == true ? :update : v))
         else
