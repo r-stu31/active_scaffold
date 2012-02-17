@@ -314,26 +314,26 @@ module ActiveScaffold
       offset = options.delete(:offset)
       options.delete(:readonly)
       options.reject{|k, v| v.blank?}.inject(query) do |query, (k, v)|
-        if k.to_sym == :order
+        if k == :order
           # default ordering of model has a higher priority than current queries ordering
           # fix this by removing existing ordering from arel
           query = query.unordered
           query.send(:order, *v)
-        elsif k.to_sym == :limit
+        elsif k == :limit
           val = [v]
           val << offset if offset
           query.send(:limit, *val)
-        elsif k.to_sym == :includes
+        elsif k == :includes
           query.send(:eager, v)
-        elsif k.to_sym == :joins
+        elsif k == :joins
           v.each do |j|
             query = query.send(:join, *j)
           end
           query
-        elsif k.to_sym == :lock
+        elsif k == :lock
           query.send(:lock_style, (v == true ? :update : v))
         else
-          query.send((k.to_sym), v)
+          query.send(k, v)
         end
       end
     end
