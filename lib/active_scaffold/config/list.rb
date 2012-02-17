@@ -171,6 +171,10 @@ module ActiveScaffold::Config
       end
 
       def sorting
+        @sorting ||= get_sorting
+      end
+
+      def get_sorting
         # we want to store as little as possible in the session, but we want to return a Sorting data structure. so we recreate it each page load based on session data.
         @session['sort'] = [@params['sort'].to_sym, @params['sort_direction'] == 'DESC'] if @params['sort'] and @params['sort_direction']
         @session['sort'] = nil if @params['sort_direction'] == 'reset'
