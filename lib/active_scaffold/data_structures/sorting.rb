@@ -96,7 +96,7 @@ module ActiveScaffold::DataStructures
     # builds an order-by clause
     def clause
       return nil if sorts_by_method? || default_sorting?
-      @clauses.collect {|c| c[0].sort[:sql]}.compact
+      @clauses.collect {|c| c[1]}.compact
     end
 
     protected
