@@ -279,7 +279,7 @@ module ActiveScaffold
       def column_renders_as(column)
         if column.is_a? ActiveScaffold::DataStructures::ActionColumns
           return :subsection
-        elsif column.active_record_class.locking_column.to_s == column.name.to_s or column.form_ui == :hidden
+        elsif (column.active_record_class.respond_to?(:lock_column) and column.active_record_class.lock_column.to_s == column.name.to_s) or column.form_ui == :hidden
           return :hidden
         elsif column.association.nil? or column.form_ui or !active_scaffold_config_for(column.association.associated_class).actions.include?(:subform)
           return :field
