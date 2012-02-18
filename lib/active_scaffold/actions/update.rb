@@ -88,7 +88,7 @@ module ActiveScaffold::Actions
           else
             # some associations such as habtm are saved before saved is called on parent object
             # we have to revert these changes if validation fails
-            raise ActiveRecord::Rollback, "don't save habtm associations unless record is valid"
+            raise Sequel::Rollback, "don't save habtm associations unless record is valid"
           end
         end
       rescue ActiveRecord::RecordInvalid
