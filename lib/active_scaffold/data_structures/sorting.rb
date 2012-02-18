@@ -5,10 +5,9 @@ module ActiveScaffold::DataStructures
       # a ActiveScaffold::DataStructures::Columns instance
       @columns = columns
 
-      # @clauses is an array of priplets: [[column, order, params], ...]
-      # where 'column' is a ActiveScaffold::DataStructures::Column instance,
-      # 'order' is Sequel::SQL::OrderedExpression or symbol - both suitable as arguments to Sequel::Dataset#order method
-      # and params is a hash with :table, :column, :descending keys
+      # @clauses is an array of pairs: [[column, params], ...]
+      # where 'column' is a ActiveScaffold::DataStructures::Column instance and
+      # 'params' is a hash with :table, :column, :descending keys
       @clauses = []
 
       # hash: 'column name'.to_sym => 'index to @clauses array'.to_i
@@ -24,6 +23,7 @@ module ActiveScaffold::DataStructures
       # If an ORDER BY clause is found set default sorting according to it, else
       # fallback to setting primary key ordering
       if order_clauses
+        # we are going to return nil from 'self.clause', but the @clauses need to be set for determining the sorting properties for view
         set_sorting_from_order_clause(order_clauses, model.table_name)
         @default_sorting = true
       else
@@ -43,7 +43,7 @@ module ActiveScaffold::DataStructures
       raise ArgumentError, "Could not find column #{params[:column]} for #{order.inspect}" if column.nil?
       if column.sortable?
         @mutex.synchronize do
-          @clauses << [column, order, params]
+          @clauses << [column, params]
           @cindex[params[:column]] = @clauses.count - 1
         end
       end
@@ -75,7 +75,7 @@ module ActiveScaffold::DataStructures
         @clauses[i] if i
       end
       if c
-        c[2][:descending] ? 'DESC' : 'ASC'
+        c[1][:descending] ? 'DESC' : 'ASC'
       end
     end
 
@@ -96,7 +96,13 @@ module ActiveScaffold::DataStructures
     # builds an order-by clause
     def clause
       return nil if sorts_by_method? || default_sorting?
-      @clauses.collect {|c| c[1]}.compact
+      @clauses.collect do |column,params|
+        if column.sort[:sql]
+          order = *column.sort[:sql]
+          order = order.collect {|o| o.respond_to?(:invert) ? o.invert : o.desc} if params[:descending]
+          order
+        end
+      end.flatten.compact
     end
 
     protected
