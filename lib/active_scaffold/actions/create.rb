@@ -93,7 +93,7 @@ module ActiveScaffold::Actions
     # If you want to customize this behavior, consider using the +before_create_save+ and +after_create_save+ callbacks.
     def do_create
       begin
-        active_scaffold_config.model.transaction do
+        active_scaffold_config.model.db.transaction do
           @record = update_record_from_params(new_model, active_scaffold_config.create.columns, params[:record])
           apply_constraints_to_record(@record, :allow_autosave => true)
           if nested?
