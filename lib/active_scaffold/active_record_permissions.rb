@@ -68,9 +68,9 @@ module ActiveRecordPermissions
 
     # Because any class-level queries get delegated to the instance level via a new record,
     # it's useful to know when the authorization query is meant for a specific record or not.
-    # But using new_record? is confusing, even though accurate. So this is basically just a wrapper.
+    # But using new? is confusing, even though accurate. So this is basically just a wrapper.
     def existing_record_check?
-      !new_record?
+      !new?
     end
 
     module SecurityMethods

@@ -16,7 +16,7 @@ module ActiveScaffold::Actions
       @record ||= build_associated(@column, @parent_record)
 
       @scope = "[#{@column.name}]"
-      @scope += (@record.new_record?) ? "[#{(Time.now.to_f*1000).to_i.to_s}]" : "[#{@record.id}]" if @column.plural_association?
+      @scope += (@record.new?) ? "[#{(Time.now.to_f*1000).to_i.to_s}]" : "[#{@record.id}]" if @column.plural_association?
     end
 
   end

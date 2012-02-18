@@ -17,7 +17,7 @@ module ActiveScaffold::Actions
         flash[:info] = as_(:deleted_model, :model => @record.to_label)
       else
         #error_message_for not available in controller...
-        #flash[:error] = active_scaffold_error_messages_for(@record, :object_name => "#{@record.class.model_name.human.downcase}#{@record.new_record? ? '' : ": #{@record.to_label}"}", :header_message => '', :message => "#{@record.class.model_name.human.downcase}#{@record.new_record? ? '' : ": #{@record.to_label}"}", :container_tag => nil, :list_type => :br)
+        #flash[:error] = active_scaffold_error_messages_for(@record, :object_name => "#{@record.class.model_name.human.downcase}#{@record.new? ? '' : ": #{@record.to_label}"}", :header_message => '', :message => "#{@record.class.model_name.human.downcase}#{@record.new? ? '' : ": #{@record.to_label}"}", :container_tag => nil, :list_type => :br)
       end
       return_to_main
     end
