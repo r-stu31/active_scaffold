@@ -44,7 +44,7 @@ module ActiveScaffold
                 text_types = [:text, :string, :integer, :float, :decimal, :date, :time, :datetime]
                 options = active_scaffold_input_text_options(options) if text_types.include?(column.column[:type])
                 if column.column[:type] == :string && options[:maxlength].blank?
-                  options[:maxlength] = column.column.limit
+                  options[:maxlength] = column.maxlength
                   options[:size] ||= ActionView::Helpers::InstanceTag::DEFAULT_FIELD_OPTIONS["size"]
                 end
                 options[:include_blank] = true if column.column[:allow_null] and [:date, :datetime, :time].include?(column.column[:type])

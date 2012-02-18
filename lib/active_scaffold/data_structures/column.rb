@@ -227,6 +227,9 @@ module ActiveScaffold::DataStructures
     # the ConnectionAdapter::*Column object from the ActiveRecord class
     attr_reader :column
 
+    # maximal length of a string column - obtained from @column
+    attr_reader :maxlength
+
     # the association from the ActiveRecord class
     attr_reader :association
 
@@ -280,6 +283,7 @@ module ActiveScaffold::DataStructures
       @options = {:format => :i18n_number} if self.number?
       @form_ui = :checkbox if @column and @column[:type] == :boolean
       @form_ui = :textarea if @column and @column[:type] == :string and (@column[:db_type] == 'text' or ((mc = @column[:max_chars]) and mc > 255))
+      @maxlength = parse_column_length if @column[:type] == :string
       @allow_add_existing = true
       @form_ui = self.class.association_form_ui if @association && self.class.association_form_ui
       
@@ -373,6 +377,12 @@ module ActiveScaffold::DataStructures
         200
       else
         300
+      end
+    end
+
+    def parse_column_length
+      if @column and @column[:db_type] =~ /\((\d+)\)/
+        $1.to_i
       end
     end
   end
