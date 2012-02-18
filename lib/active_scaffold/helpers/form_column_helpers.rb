@@ -47,7 +47,7 @@ module ActiveScaffold
                   options[:maxlength] = column.column.limit
                   options[:size] ||= ActionView::Helpers::InstanceTag::DEFAULT_FIELD_OPTIONS["size"]
                 end
-                options[:include_blank] = true if column.column.null and [:date, :datetime, :time].include?(column.column[:type])
+                options[:include_blank] = true if column.column[:allow_null] and [:date, :datetime, :time].include?(column.column[:type])
                 options[:value] = format_number_value(@record.send(column.name), column.options) if column.number?
                 text_field(:record, column.name, options.merge(column.options))
               end
@@ -195,7 +195,7 @@ module ActiveScaffold
 
       def active_scaffold_input_boolean(column, options)
         select_options = []
-        select_options << [as_(:_select_), nil] if !column.virtual? && column.column.null
+        select_options << [as_(:_select_), nil] if !column.virtual? && column.column[:allow_null]
         select_options << [as_(:true), true]
         select_options << [as_(:false), false]
 
