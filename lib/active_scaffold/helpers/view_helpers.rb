@@ -64,12 +64,8 @@ module ActiveScaffold
 
       # Should this column be displayed in the subform?
       def in_subform?(column, parent_record)
-        return true unless column.association
-
         # A column shouldn't be in the subform if it's the reverse association to the parent
-        return false if column.association.inverse_for?(parent_record.class)
-
-        return true
+        not (column.association and column.association.associated_class == parent_record.class)
       end
 
       def form_remote_upload_tag(url_for_options = {}, options = {})
