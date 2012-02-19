@@ -2,7 +2,10 @@ module ActiveScaffold::Actions
   module CommonSearch
     protected
     def store_search_params_into_session
-      active_scaffold_session_storage[:search] = params.delete :search if params[:search]
+      if params[:search]
+        s = params.delete(:search).strip
+        active_scaffold_session_storage[:search] = (s == '' ? nil : s)
+      end
     end
     
     def search_params
