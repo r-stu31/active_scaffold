@@ -1,6 +1,6 @@
 <%
 begin
-  remote_controller = active_scaffold_controller_for(column.association.klass)
+  remote_controller = active_scaffold_controller_for(column.association.associated_class)
 rescue ActiveScaffold::ControllerNotFound
   remote_controller = nil
 end
@@ -19,7 +19,7 @@ add_new_url = url_for(:action => 'edit_associated', :id => parent_record.id, :as
   <div class="footer">
     <% if show_add_new -%>
     <% if column.plural_association?
-         add_label = as_(:create_another, :model => column.association.klass.model_name.human)
+         add_label = as_(:create_another, :model => column.association.associated_class.model_name.human)
          add_class = 'as_create_another'
        else
          add_label = as_(:replace_with_new)
