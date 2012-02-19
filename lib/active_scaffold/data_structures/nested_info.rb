@@ -53,10 +53,6 @@ module ActiveScaffold::DataStructures
       false
     end
     
-    def readonly?
-      false
-    end
-
     def sorted?
       false
     end
@@ -85,10 +81,6 @@ module ActiveScaffold::DataStructures
       association[:type] == :one_to_one
     end
     
-    def readonly?
-      false
-    end
-
     def sorted?
       association.has_key? :order
     end
