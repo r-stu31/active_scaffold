@@ -51,7 +51,7 @@ class Sequel::Model
       records = send(association)
       if records
         records = [records] unless records.is_a? Array # convert singular associations into collections for ease of use
-        records.select {|r| r.unsaved? and not r.readonly?}.all? {|r| yield r} # must use select instead of find_all, which Rails overrides on association proxies for db access
+        records.select {|r| r.unsaved?}.all? {|r| yield r} # must use select instead of find_all, which Rails overrides on association proxies for db access
       else
         true
       end
