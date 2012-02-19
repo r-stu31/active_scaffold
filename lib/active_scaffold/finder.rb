@@ -17,9 +17,12 @@ module ActiveScaffold
             if column.column.nil? or column.column[:type] == :string
               column.search_sql.ilike(pattern)
             else
-              {column.search_sql => obj.send(:typecast_value, column.name, token)}
+              begin
+                {column.search_sql => obj.send(:typecast_value, column.name, token)}
+              rescue Sequel::InvalidValue
+              end
             end
-          end.inject {|a,b| (a | b)}
+          end.compact.inject {|a,b| (a | b)}
         end.inject {|a,b| (a & b)}
       end
 
