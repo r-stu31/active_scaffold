@@ -103,7 +103,7 @@ module ActiveScaffold::Actions
           when :many_to_one
             record.send("#{nested.child_association[:name]}=", parent)
           when :one_to_many, :many_to_many
-            record.send("add_#{nested.child_association[:name]}", parent)
+            record.send("add_#{nested.child_association[:name].to_s.singularize}", parent)
           end unless parent.nil?
         end
       end

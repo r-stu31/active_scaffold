@@ -141,7 +141,7 @@ module ActiveScaffold
         column = active_scaffold_config.columns[k]
         if column and column.association
           if column.plural_association?
-            record.send("add_#{k}", column.association.associated_class.filter(v))
+            record.send("add_#{k.to_s.singularize}", column.association.associated_class.filter(v))
           else # regular singular association
             record.send("#{k}=", column.association.associated_class.filter(v))
 
