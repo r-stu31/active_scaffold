@@ -1,3 +1,14 @@
+The original ActiveScaffold supports Rails (http://rubyonrails.org/) with
+it's native ORM ActiveRecord. This version replaces support for ActiveRecord
+with support for Sequel (http://sequel.rubyforge.org/).
+
+Homepage:
+http://as-seq.rubyforge.org/
+Repository:
+https://github.com/r-stu31/active_scaffold/tree/sequel
+
+README for original ActiveScaffold:
+
 ******************************************************************************************************
 ** For all documentation see the project website: http://github.com/vhochstein/active_scaffold/wiki **
 ******************************************************************************************************
