@@ -97,13 +97,13 @@ module ActiveScaffold::Actions
       if nested?
         if (nested.belongs_to? || nested.has_one? || nested.habtm?) && nested.child_association
           parent = nested_parent_record(:read)
-          case nested.child_association.macro
-          when :has_one
+          case nested.child_association[:type]
+          when :one_to_one
             record.send("#{nested.child_association[:name]}=", parent)
-          when :belongs_to
+          when :many_to_one
             record.send("#{nested.child_association[:name]}=", parent)
-          when :has_many, :has_and_belongs_to_many
-            record.send("#{nested.child_association[:name]}").send(:<<, parent)
+          when :one_to_many, :many_to_many
+            record.send("add_#{nested.child_association[:name]}", parent)
           end unless parent.nil?
         end
       end

@@ -62,16 +62,16 @@ module ActiveScaffold
           parent_record.send("#{column.name}=", value) unless parent_record.send(column.name) == value
           
         elsif column.plural_association?
-          parent_record.send("#{column.name}=", [])
+          parent_record.send("remove_all_#{column.name}")
         end
       end
 
       if parent_record.new?
         parent_record.class.association_reflections.each do |name, props|
           next unless [:one_to_one, :one_to_many].include?(props[:type]) and props[:join_table].nil?
-          next unless association_proxy = parent_record.send(a.name)
+          next unless association_proxy = parent_record.send(name)
 
-          raise ActiveScaffold::ReverseAssociationRequired, "Association #{props[:name]} in class #{parent_record.class.name}: In order to support :one_to_one and :one_to_many where the parent record is new and the child record(s) validate the presence of the parent, ActiveScaffold requires the reverse association (the many_to_one)." unless props.reciprocal
+          raise ActiveScaffold::ReverseAssociationRequired, "Association #{name} in class #{parent_record.class.name}: In order to support :one_to_one and :one_to_many where the parent record is new and the child record(s) validate the presence of the parent, ActiveScaffold requires the reverse association (the many_to_one)." unless props.reciprocal
 
           association_proxy = [association_proxy] if props[:type] == :one_to_one
           association_proxy.each {|record| record.send("#{props.reciprocal}=", parent_record)}
