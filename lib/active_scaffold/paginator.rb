@@ -1,6 +1,6 @@
 require 'forwardable'
 
-class Paginator
+class ActiveScaffold::Paginator
   
   VERSION = '1.0.9'
 
