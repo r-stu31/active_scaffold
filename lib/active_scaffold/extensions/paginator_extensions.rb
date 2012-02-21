@@ -1,6 +1,6 @@
 require 'active_scaffold/paginator'
 
-class Paginator
+class ActiveScaffold::Paginator
 
   # Total number of pages
   def number_of_pages_with_infinite
