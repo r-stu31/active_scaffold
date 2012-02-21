@@ -61,7 +61,7 @@ module ActiveScaffold
           # we avoid assigning a value that already exists because otherwise has_one associations will break (AR bug in has_one_association.rb#replace)
           parent_record.send("#{column.name}=", value) unless parent_record.send(column.name) == value
           
-        elsif column.plural_association?
+        elsif column.plural_association? and not parent_record.new?
           parent_record.send("remove_all_#{column.name}")
         end
       end
