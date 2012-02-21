@@ -5,17 +5,16 @@ module ActiveScaffold
       def association_options_find(association, conditions = nil)
         relation = association.associated_class.dataset
         relation = relation.where(conditions) if conditions
-# XXX get the conditions from some dataset?
-#        relation = relation.where(association.options[:conditions]) if association.options[:conditions]
-#        relation = relation.eager(association.options[:include]) if association.options[:include]
+        relation = relation.where(association[:conditions]) if association[:conditions]
+        relation = relation.eager(association[:eager]) if association[:eager]
+        relation = relation.eager_graph(association[:eager_graph]) if association[:eager_graph]
         relation.all
       end
 
       def association_options_count(association, conditions = nil)
         relation = association.associated_class.dataset
         relation = relation.where(conditions) if conditions
-# XXX get the conditions from some dataset?
-#        relation = relation.where(association.options[:conditions]) if association.options[:conditions]
+        relation = relation.where(association[:conditions]) if association[:conditions]
         relation.count
       end
 
