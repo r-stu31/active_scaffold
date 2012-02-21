@@ -81,11 +81,7 @@ module ActiveScaffold
       end
       
       def build_associated(column, record)
-        if column.singular_association?
-          record.send(:"build_#{column.name}")
-        else
-          record.send(column.name).build
-        end
+        column.association.associated_class.new
       end
     end
   end
