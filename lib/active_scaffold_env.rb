@@ -2,7 +2,7 @@
 Dir["#{File.dirname __FILE__}/active_scaffold/extensions/*.rb"].each { |file| require file }
 
 ActionController::Base.send(:include, ActiveScaffold)
-ActionController::Base.send(:include, RespondsToParent)
+ActionController::Base.send(:include, ActiveScaffold::RespondsToParent)
 ActionController::Base.send(:include, ActiveScaffold::Helpers::ControllerHelpers)
 ActionView::Base.send(:include, ActiveScaffold::Helpers::ViewHelpers)
 
