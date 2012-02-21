@@ -6,7 +6,7 @@ Gem::Specification.new do |s|
   s.name = %q{active_scaffold-sequel}
   s.version = ActiveScaffold::Version::STRING
   s.platform = Gem::Platform::RUBY
-  s.email = %q{nospam@example.com}
+  s.email = %q{stu3.141@googlemail.com}
   s.authors = ["Many, see README"]
   s.homepage = %q{http://as-seq.rubyforge.org/}
   s.summary = %q{ActiveScaffold version supporting Sequel with Rails 3.1.}
