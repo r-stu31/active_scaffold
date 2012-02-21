@@ -16,7 +16,7 @@ module ActiveScaffold::Actions
       active_scaffold_config.list.always_show_search
     end
     
-    # The default security delegates to ActiveRecordPermissions.
+    # The default security delegates to ModelPermissions.
     # You may override the method to customize.
     def search_authorized?
       authorized_for?(:crud_type => :read)

@@ -101,7 +101,7 @@ module ActiveScaffold::Actions
       klass.all(finder_options).each {|record| yield record}
     end
 
-    # The default security delegates to ActiveRecordPermissions.
+    # The default security delegates to ModelPermissions.
     # You may override the method to customize.
     def list_authorized?
       authorized_for?(:crud_type => :read)

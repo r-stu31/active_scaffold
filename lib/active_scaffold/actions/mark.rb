@@ -62,7 +62,7 @@ module ActiveScaffold::Actions
       end
     end
     
-    # The default security delegates to ActiveRecordPermissions.
+    # The default security delegates to ModelPermissions.
     # You may override the method to customize.
     def mark_authorized?
       authorized_for?(:crud_type => :read)

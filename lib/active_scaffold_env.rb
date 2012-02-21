@@ -6,6 +6,6 @@ ActionController::Base.send(:include, ActiveScaffold::RespondsToParent)
 ActionController::Base.send(:include, ActiveScaffold::Helpers::ControllerHelpers)
 ActionView::Base.send(:include, ActiveScaffold::Helpers::ViewHelpers)
 
-ActionController::Base.class_eval {include ActiveRecordPermissions::ModelUserAccess::Controller}
-Sequel::Model.class_eval     {include ActiveRecordPermissions::ModelUserAccess::Model}
-Sequel::Model.class_eval     {include ActiveRecordPermissions::Permissions}
+ActionController::Base.class_eval {include ActiveScaffold::ModelPermissions::ModelUserAccess::Controller}
+Sequel::Model.class_eval     {include ActiveScaffold::ModelPermissions::ModelUserAccess::Model}
+Sequel::Model.class_eval     {include ActiveScaffold::ModelPermissions::Permissions}

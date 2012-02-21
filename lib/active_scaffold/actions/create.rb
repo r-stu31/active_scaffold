@@ -123,7 +123,7 @@ module ActiveScaffold::Actions
     # override this method if you want to do something after the save
     def after_create_save(record); end
 
-    # The default security delegates to ActiveRecordPermissions.
+    # The default security delegates to ModelPermissions.
     # You may override the method to customize.
     
     def create_ignore?

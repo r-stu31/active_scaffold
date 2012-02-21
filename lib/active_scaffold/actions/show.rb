@@ -44,7 +44,7 @@ module ActiveScaffold::Actions
       @record = find_if_allowed(params[:id], :read)
     end
 
-    # The default security delegates to ActiveRecordPermissions.
+    # The default security delegates to ModelPermissions.
     # You may override the method to customize.
     def show_authorized?(record = nil)
       authorized_for?(:crud_type => :read)

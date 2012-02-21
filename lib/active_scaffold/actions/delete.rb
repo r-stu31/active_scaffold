@@ -59,7 +59,7 @@ module ActiveScaffold::Actions
       end
     end
 
-    # The default security delegates to ActiveRecordPermissions.
+    # The default security delegates to ModelPermissions.
     # You may override the method to customize.
     def delete_authorized?(record = nil)
       authorized_for?(:crud_type => :delete)

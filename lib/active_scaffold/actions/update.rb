@@ -130,7 +130,7 @@ module ActiveScaffold::Actions
       active_scaffold_config.update.refresh_list
     end
 
-    # The default security delegates to ActiveRecordPermissions.
+    # The default security delegates to ModelPermissions.
     # You may override the method to customize.
     def update_authorized?(record = nil)
       authorized_for?(:crud_type => :update)
