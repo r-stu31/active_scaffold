@@ -241,14 +241,14 @@ module ActiveScaffold
       end
 
       def column_calculation(column)
-        unless column.calculate.instance_of? Proc
+        if column.calculate.instance_of? Proc
+          column.calculate.call(@records)
+        else
           conditions = controller.send(:all_conditions)
           includes = active_scaffold_config.list.count_includes
           includes ||= controller.send(:active_scaffold_includes) unless conditions.nil?
-          calculation = beginning_of_chain.calculate(column.calculate, column.name, :conditions => conditions,
-           :joins => controller.send(:joins_for_collection), :include => includes)
-        else
-          column.calculate.call(@records)
+          controller.send(:append_to_query, beginning_of_chain.dataset, :where => conditions, :includes => includes,
+            :joins => controller.send(:joins_for_collection)).get(column.calculate.sql_function(column.name))
         end
       end
 
