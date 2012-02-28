@@ -1,7 +1,7 @@
 <%
 parent_record = @record
 associated = column.singular_association? ? [parent_record.send(column.name)].compact : parent_record.send(column.name).to_a
-associated = associated.sort_by {|r| r.new? ? 99999999999 : r.id} unless parent_record.send("#{column.name}_dataset").opts.has_key?(:order)
+associated = associated.sort_by {|r| r.new? ? 99999999999 : r.id} unless column.association[:order]
 if show_blank_record = column.show_blank_record?(associated)
   associated << build_associated(column, parent_record)
 end
