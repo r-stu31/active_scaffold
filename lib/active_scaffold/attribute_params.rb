@@ -55,12 +55,10 @@ module ActiveScaffold
 
         if multi_parameter_attributes.has_key? column.name
           parent_record.send(:assign_multiparameter_attributes, multi_parameter_attributes[column.name])
-        elsif attributes.has_key? column.name
-          value = column_value_from_param_value(parent_record, column, attributes[column.name]) 
-
+        elsif attributes.has_key? column.name.to_s
+          value = column_value_from_param_value(parent_record, column, attributes[column.name.to_s]) 
           # we avoid assigning a value that already exists because otherwise has_one associations will break (AR bug in has_one_association.rb#replace)
           parent_record.send("#{column.name}=", value) unless parent_record.send(column.name) == value
-          
         elsif column.plural_association? and not parent_record.new?
           parent_record.send("remove_all_#{column.name}")
         end
@@ -80,7 +78,7 @@ module ActiveScaffold
 
       parent_record
     end
-    
+
     def manage_nested_record_from_params(parent_record, column, attributes)
       record = find_or_create_for_params(attributes, column, parent_record)
       if record
