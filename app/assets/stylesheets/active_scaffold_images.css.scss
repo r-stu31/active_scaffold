@@ -15,18 +15,15 @@ background-image: image-url('active_scaffold/add.gif');
 background-image: image-url('active_scaffold/magnifier.png');
 }
 
-.active-scaffold th.asc a,
-.active-scaffold th.asc a:hover {
+.active-scaffold th.asc a {
 background-image: image-url('active_scaffold/arrow_up.gif');
 }
 
-.active-scaffold th.desc a,
-.active-scaffold th.desc a:hover {
+.active-scaffold th.desc a {
 background-image: image-url('active_scaffold/arrow_down.gif');
 }
 
-.active-scaffold th.loading a,
-.active-scaffold th.loading a:hover {
+.active-scaffold th.loading a {
 background-image: image-url('active_scaffold/indicator-small.gif');
 }
 
