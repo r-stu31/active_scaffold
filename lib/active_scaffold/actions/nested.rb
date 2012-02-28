@@ -203,7 +203,7 @@ module ActiveScaffold::Actions::Nested
     end
  
     def after_create_save(record)
-      if params[:association_macro] == :has_and_belongs_to_many
+      if nested.habtm?
         params[:associated_id] = record
         do_add_existing
       end
