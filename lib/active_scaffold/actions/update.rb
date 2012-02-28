@@ -81,25 +81,18 @@ module ActiveScaffold::Actions
         active_scaffold_config.model.db.transaction do
           @record = update_record_from_params(@record, active_scaffold_config.update.columns, params[:record]) unless options[:no_record_param_update]
           before_update_save(@record)
-          self.successful = [@record.valid?, @record.associated_valid?].all? {|v| v == true} # this syntax avoids a short-circuit
-          if successful?
-            @record.save! and @record.save_associated!
-            after_update_save(@record)
-          else
-            # some associations such as habtm are saved before saved is called on parent object
-            # we have to revert these changes if validation fails
-            raise Sequel::Rollback, "don't save habtm associations unless record is valid"
-          end
+          @record.raise_on_save_failure = false
+          self.successful = @record.save
+          raise Sequel::Rollback unless successful?
+          after_update_save(@record)
         end
-      rescue ActiveRecord::RecordInvalid
-        flash[:error] = $!.message
-        self.successful = false
-      rescue ActiveRecord::StaleObjectError
-        @record.errors.add(:base, as_(:version_inconsistency))
-        self.successful = false
-      rescue ActiveRecord::RecordNotSaved
-        @record.errors.add(:base, as_(:record_not_saved)) if @record.errors.empty?
-        self.successful = false
+      rescue Sequel::Error => err
+        if Sequel::Plugins.const_defined?(:OptimisticLocking) and err.kind_of?(Sequel::Plugins::OptimisticLocking::Error)
+          @record.errors.add(:base, as_(:version_inconsistency))
+          self.successful = false
+        else
+          raise err
+        end
       end
     end
 
