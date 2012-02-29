@@ -33,7 +33,7 @@ module ActiveScaffold
       def render_list_column(text, column, record)
         if column.link
           link = column.link
-          associated = record.send(column.association[:name]) if column.association
+          associated = column.association ? record.send(column.association[:name]) : nil
           url_options = params_for(:action => nil, :id => record.id)
 
           # setup automatic link
@@ -49,8 +49,9 @@ module ActiveScaffold
           else
             "<a class='disabled'>#{text}</a>".html_safe
           end
+        elsif inplace_edit?(record, column)
+          active_scaffold_inplace_edit(record, column, {:formatted_column => text})
         else
-          text = active_scaffold_inplace_edit(record, column, {:formatted_column => text}) if inplace_edit?(record, column)
           text
         end
       end
