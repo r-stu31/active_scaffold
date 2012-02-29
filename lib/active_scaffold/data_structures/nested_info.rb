@@ -8,10 +8,10 @@ module ActiveScaffold::DataStructures
         nested_info[:parent_model] = nested_info[:parent_scaffold].active_scaffold_config.model
         nested_info[:parent_id] = params[nested_info[:parent_model].name.foreign_key]
         if nested_info[:parent_id]
-          unless params[:association].nil?
-            ActiveScaffold::DataStructures::NestedInfoAssociation.new(model, nested_info)
-          else
+          if params[:association].nil?
             ActiveScaffold::DataStructures::NestedInfoScope.new(model, nested_info)
+          else
+            ActiveScaffold::DataStructures::NestedInfoAssociation.new(model, nested_info)
           end
         end
       rescue ActiveScaffold::ControllerNotFound
@@ -38,7 +38,7 @@ module ActiveScaffold::DataStructures
     end
     
     def parent_scope
-      parent_model.find(parent_id)
+      parent_model[parent_id]
     end
     
     def habtm?
