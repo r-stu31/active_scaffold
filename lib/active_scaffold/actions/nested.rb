@@ -210,10 +210,9 @@ module ActiveScaffold::Actions::Nested
     # The actual "add_existing" algorithm
     def do_add_existing
       parent_record = nested_parent_record(:update)
-      @record = active_scaffold_config.model.find(params[:associated_id])
+      @record = active_scaffold_config.model[params[:associated_id]]
       if parent_record && @record
-        parent_record.send(nested.association[:name]) << @record
-        parent_record.save
+        parent_record.send("add_#{nested.association[:name].to_s.singularize}", @record)
       else
         false
       end
@@ -222,9 +221,7 @@ module ActiveScaffold::Actions::Nested
     def do_destroy_existing
       if active_scaffold_config.nested.shallow_delete
         @record = nested_parent_record(:update)
-        collection = @record.send(nested.association[:name])
-        assoc_record = collection.find(params[:id])
-        collection.delete(assoc_record)
+        @record.send("remove_#{nested.association[:name].to_s.singularize}", params[:id])
       else
         do_destroy
       end
