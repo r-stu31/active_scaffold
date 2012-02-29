@@ -22,10 +22,11 @@ module ActiveScaffold::DataStructures
       @parent_id = nested_info[:parent_id]
       @parent_scaffold = nested_info[:parent_scaffold]
       @association = @parent_model.association_reflection(nested_info[:name])
+      iterate_model_associations(model)
     end
     
     def to_params
-      {:parent_scaffold => parent_scaffold.controller_path}
+      {:parent_scaffold => parent_scaffold.controller_path, :association => association[:name], :assoc_id => parent_id}
     end
     
     def new_instance?
@@ -39,7 +40,7 @@ module ActiveScaffold::DataStructures
     end
 
     def name
-      self.association[:name]
+      association[:name]
     end
 
     def habtm?
@@ -60,10 +61,6 @@ module ActiveScaffold::DataStructures
 
     def default_sorting
       association[:order]
-    end
-    
-    def to_params
-      super.merge(:association => @association[:name], :assoc_id => parent_id)
     end
     
     protected
