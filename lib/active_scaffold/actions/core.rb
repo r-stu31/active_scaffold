@@ -139,11 +139,21 @@ module ActiveScaffold::Actions
       {}
     end
   
-    #Overide this method on your controller to provide model with named scopes
+    # Overide this method on your controller to provide model with named scopes
+    # This method returns a model class or a dataset.
     def beginning_of_chain
       active_scaffold_config.model
     end
-        
+
+    # This method returns a model class.
+    def origin_class
+      active_scaffold_config.model
+    end
+
+    def origin_class_with_build_options
+      [origin_class, {}]
+    end
+
     # Builds search conditions by search params for column names. This allows urls like "contacts/list?company_id=5".
     def conditions_from_params
       conditions = nil
@@ -155,8 +165,7 @@ module ActiveScaffold::Actions
     end
 
     def new_model
-      model = beginning_of_chain
-      build_options = {}
+      model, build_options = origin_class_with_build_options
       if model.respond_to?(:sti_key)
         build_options[model.sti_key] = active_scaffold_config.model_id if nested? && nested.association && nested.association.collection?
         sti_key = model.sti_key.to_s

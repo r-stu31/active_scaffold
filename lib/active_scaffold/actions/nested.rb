@@ -76,14 +76,30 @@ module ActiveScaffold::Actions
     end
     
     def beginning_of_chain
-      if nested? && nested.association && !nested.association.belongs_to?
-        if nested.association.collection?
-          nested.parent_scope.send(nested.association[:name])
-        elsif nested.child_association.belongs_to?
-          active_scaffold_config.model.where(nested.child_association.foreign_key => nested.parent_scope)
+      if nested? && nested.association && !(nested.association[:type] == :many_to_one)
+        if nested.association.returns_array?
+          nested.parent_scope.send("#{nested.association[:name]}_dataset")
+        elsif nested.child_association[:type] == :many_to_one
+          active_scaffold_config.model.where((nested.child_association[:key] || nested.child_association[:left_key]) => nested.parent_id)
         end
       else
         active_scaffold_config.model
+      end
+    end
+
+    def origin_class
+      origin_class_with_build_options[0]
+    end
+
+    def origin_class_with_build_options
+      if nested? && nested.association && !(nested.association[:type] == :many_to_one)
+        if nested.association.returns_array?
+          [nested.association.associated_class, {nested.association.reciprocal => nested.parent_scope}]
+        elsif nested.child_association[:type] == :many_to_one
+          [active_scaffold_config.model, {(nested.child_association[:key] || nested.child_association[:left_key]) => nested.parent_id}]
+        end
+      else
+        [active_scaffold_config.model, {}]
       end
     end
 

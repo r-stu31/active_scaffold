@@ -240,7 +240,7 @@ module ActiveScaffold
     # returns a single record (the given id) but only if it's allowed for the specified action.
     # accomplishes this by checking model.#{action}_authorized?
     # TODO: this should reside on the model, not the controller
-    def find_if_allowed(id, crud_type, klass = beginning_of_chain)
+    def find_if_allowed(id, crud_type, klass = origin_class)
       record = klass[id]
       raise ActiveScaffold::RecordNotAllowed, "#{klass} with id = #{id}" unless record.authorized_for?(:crud_type => crud_type.to_sym)
       return record
