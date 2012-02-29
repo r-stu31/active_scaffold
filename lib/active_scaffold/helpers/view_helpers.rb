@@ -119,7 +119,7 @@ module ActiveScaffold
         @link_record = record
         url_options.merge! self.instance_eval(&(link.dynamic_parameters)) if link.dynamic_parameters.is_a?(Proc)
         @link_record = nil
-        url_options_for_nested_link(link.column, record, link, url_options, options) if link.nested_link?
+        url_options_for_nested_link(link.column, record, link, url_options, options) if link.column
         url_options_for_sti_link(link.column, record, link, url_options, options) unless record.nil? || active_scaffold_config.sti_children.nil?
         url_options[:_method] = link.method if !link.confirm? && link.inline? && link.method != :get
         url_options
