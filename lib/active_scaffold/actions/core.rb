@@ -156,14 +156,17 @@ module ActiveScaffold::Actions
 
     def new_model
       model = beginning_of_chain
+      build_options = {}
       if model.respond_to?(:sti_key)
-        build_options = {model.sti_key => active_scaffold_config.model_id} if nested? && nested.association && nested.association.collection?
+        build_options[model.sti_key] = active_scaffold_config.model_id if nested? && nested.association && nested.association.collection?
         sti_key = model.sti_key.to_s
-        params = self.params # in new action sti_key must be in params
-        params = params[:record] || {} unless params[sti_key] # in create action must be inside record key
-        model = params.delete(sti_key).camelize.constantize if params[sti_key]
+        if params[sti_key]  # in new action sti_key must be in params
+          model = params[sti_key].constantize
+        elsif params[:record] and params[:record][sti_key]  # in create action must be inside record key
+          model = params[:record][sti_key].constantize
+        end
       end
-      model.respond_to?(:build) ? model.build(build_options || {}) : model.new
+      model.new(build_options)
     end
 
     private
