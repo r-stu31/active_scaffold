@@ -83,7 +83,6 @@ module ActiveScaffold::Actions
       @record = new_model
       apply_constraints_to_record(@record)
       if nested?
-        create_association_with_parent(@record)
         register_constraints_with_action_columns(nested.constrained_fields)
       end
       @record
