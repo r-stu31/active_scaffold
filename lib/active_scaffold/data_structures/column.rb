@@ -220,6 +220,13 @@ module ActiveScaffold::DataStructures
     cattr_accessor :association_form_ui
     @@association_form_ui = nil
 
+    # boolean: true if the column is for a nested association, otherwise nil
+    attr_accessor :nested
+
+    def nested_attribute_name
+      @nested_attribute_name ||= "#{name}_attributes"
+    end
+
     # ----------------------------------------------------------------- #
     # the below functionality is intended for internal consumption only #
     # ----------------------------------------------------------------- #
@@ -270,6 +277,7 @@ module ActiveScaffold::DataStructures
       self.name = name
       @column = active_record_class.db_schema[name]
       @association = active_record_class.association_reflection(name)
+      @nested = true if @association and @association[:nested_attributes]
       @autolink = !@association.nil?
       @active_record_class = active_record_class
       @table = active_record_class.table_name

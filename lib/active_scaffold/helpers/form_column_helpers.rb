@@ -289,10 +289,11 @@ module ActiveScaffold
       end
 
       def column_scope(column)
+        name = column.nested ? column.nested_attribute_name : column.name
         if column.plural_association?
-          "[#{column.name}][#{@record.id || generate_temporary_id}]"
+          "[#{name}][#{@record.id || generate_temporary_id}]"
         else
-          "[#{column.name}]"
+          "[#{name}]"
         end
       end
 
