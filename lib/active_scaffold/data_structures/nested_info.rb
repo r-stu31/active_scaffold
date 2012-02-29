@@ -28,13 +28,7 @@ module ActiveScaffold::DataStructures
     def to_params
       {:parent_scaffold => parent_scaffold.controller_path, :association => association[:name], :assoc_id => parent_id}
     end
-    
-    def new_instance?
-      result = @new_instance.nil?
-      @new_instance = false
-      result
-    end
-    
+
     def parent_scope
       parent_model[parent_id]
     end
