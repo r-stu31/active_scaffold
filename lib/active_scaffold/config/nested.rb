@@ -26,14 +26,7 @@ module ActiveScaffold::Config
         action_link = @core.link_for_association(column, options)
         action_link.action ||= :index
         @core.action_links.add_to_group(action_link, action_group) unless action_link.nil?
-      else
-        
       end
-    end
-    
-    def add_scoped_link(named_scope, options = {})
-      action_link = @core.link_for_association_as_scope(named_scope.to_sym, options)
-      @core.action_links.add_to_group(action_link, action_group) unless action_link.nil?
     end
 
     # the label for this Nested action. used for the header.

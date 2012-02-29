@@ -183,8 +183,6 @@ module ActiveScaffold
         if column && column.association 
           url_options[column.association[:model].name.foreign_key.to_sym] = url_options.delete(:id)
           url_options[:id] = record.send(column.association[:name]).id if column.singular_association? && record.send(column.association[:name]).present?
-        elsif link.parameters && link.parameters[:named_scope]
-          url_options[active_scaffold_config.model.name.foreign_key.to_sym] = url_options.delete(:id)
         end
       end
 

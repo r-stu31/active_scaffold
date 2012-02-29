@@ -24,7 +24,7 @@ module ActiveScaffold::Actions
     end
     
     def set_nested
-      if params[:parent_scaffold] && (params[:association] || params[:named_scope])
+      if params[:parent_scaffold] && params[:association]
         @nested = ActiveScaffold::DataStructures::NestedInfo.get(active_scaffold_config.model, params)
         unless @nested.nil?
           active_scaffold_constraints[:id] = params[:id] if @nested.belongs_to?
@@ -82,8 +82,6 @@ module ActiveScaffold::Actions
         elsif nested.child_association.belongs_to?
           active_scaffold_config.model.where(nested.child_association.foreign_key => nested.parent_scope)
         end
-      elsif nested? && nested.scope
-        nested.parent_scope.send(nested.scope)
       else
         active_scaffold_config.model
       end
