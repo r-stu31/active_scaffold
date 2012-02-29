@@ -217,7 +217,7 @@ module ActiveScaffold::Actions::Nested
     end
  
     def after_create_save(record)
-      if nested.habtm?
+      if nested and nested.habtm?
         params[:associated_id] = record
         do_add_existing
       end
