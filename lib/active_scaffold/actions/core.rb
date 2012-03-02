@@ -142,7 +142,7 @@ module ActiveScaffold::Actions
     # Overide this method on your controller to provide model with named scopes
     # This method returns a model class or a dataset.
     def beginning_of_chain
-      active_scaffold_config.model
+      active_scaffold_config.model.qualify
     end
 
     # This method returns a model class.

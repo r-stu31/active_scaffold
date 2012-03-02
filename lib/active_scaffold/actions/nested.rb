@@ -80,10 +80,11 @@ module ActiveScaffold::Actions
         if nested.association.returns_array?
           nested.parent_scope.send("#{nested.association[:name]}_dataset")
         elsif nested.child_association[:type] == :many_to_one
-          active_scaffold_config.model.where((nested.child_association[:key] || nested.child_association[:left_key]) => nested.parent_id)
+          active_scaffold_config.model.qualify.where((nested.child_association[:key] || nested.child_association[:left_key]) => nested.parent_id)
         end
       else
-        active_scaffold_config.model
+        # specified in actions/core.rb
+        super
       end
     end
 
