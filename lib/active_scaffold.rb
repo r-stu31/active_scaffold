@@ -2,12 +2,6 @@ unless Rails::VERSION::MAJOR == 3 && Rails::VERSION::MINOR >= 1
   raise "This version of ActiveScaffold requires Rails 3.1 or higher.  Please use an earlier version."
 end
 
-begin
-  require 'render_component'
-rescue LoadError
-end
-
-
 require 'active_scaffold/version'
 require 'active_scaffold/engine' unless defined? ACTIVE_SCAFFOLD_PLUGIN
 require 'json'  # for js_config

@@ -17,7 +17,6 @@ module ActiveScaffold::Actions
 
     def list
       do_list
-      @nested_auto_open = active_scaffold_config.list.nested_auto_open
       respond_to_action(:list)
     end
     

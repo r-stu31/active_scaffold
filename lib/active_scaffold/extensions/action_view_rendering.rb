@@ -73,25 +73,20 @@ module ActionView::Helpers #:nodoc:
         id = "as_#{eid}-embedded"
         url_options = {:controller => remote_controller.to_s, :action => 'index'}.merge(options[:params])
 
-        if controller.respond_to?(:render_component_into_view)
-          controller.send(:render_component_into_view, url_options)
-        else
-          content_tag(:div, :id => id, :class => 'active-scaffold-component') do
-            url = url_for(url_options)
-            # parse the ActiveRecord model name from the controller path, which
-            # might be a namespaced controller (e.g., 'admin/admins')
-            model = remote_controller.to_s.sub(/.*\//, '').singularize
-            content_tag(:div, :class => 'active-scaffold-header') do
-              content_tag :h2, link_to(args.first[:label] || active_scaffold_config_for(model).list.label, url, :remote => true)
-            end <<
-            if ActiveScaffold.js_framework == :prototype
-              javascript_tag("new Ajax.Updater('#{id}', '#{url}', {method: 'get', evalScripts: true});")
-            elsif ActiveScaffold.js_framework == :jquery
-              javascript_tag("jQuery('##{id}').load('#{url}');")
-            end
+        content_tag(:div, :id => id, :class => 'active-scaffold-component') do
+          url = url_for(url_options)
+          # parse the ActiveRecord model name from the controller path, which
+          # might be a namespaced controller (e.g., 'admin/admins')
+          model = remote_controller.to_s.sub(/.*\//, '').singularize
+          content_tag(:div, :class => 'active-scaffold-header') do
+            content_tag :h2, link_to(args.first[:label] || active_scaffold_config_for(model).list.label, url, :remote => true)
+          end <<
+          if ActiveScaffold.js_framework == :prototype
+            javascript_tag("new Ajax.Updater('#{id}', '#{url}', {method: 'get', evalScripts: true});")
+          elsif ActiveScaffold.js_framework == :jquery
+            javascript_tag("jQuery('##{id}').load('#{url}');")
           end
         end
-
       else
         options = args.first
         if options.is_a?(Hash)
