@@ -40,7 +40,6 @@ module ActiveScaffold::Config
 
     # access to the permissions configuration.
     # configuration options include:
-    #  * current_user_method - what method on the controller returns the current user. default: :current_user
     #  * default_permission - what the default permission is. default: true
     def self.security
       ModelPermissions
