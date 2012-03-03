@@ -9,7 +9,7 @@ require 'json'  # for js_config
 module ActiveScaffold
   require 'active_scaffold/paginator'
   require 'active_scaffold/responds_to_parent'
-  require 'active_scaffold/active_record_permissions'
+  require 'active_scaffold/model_permissions'
 
   autoload :AttributeParams, 'active_scaffold/attribute_params'
   autoload :Configurable, 'active_scaffold/configurable'
