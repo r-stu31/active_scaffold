@@ -165,6 +165,9 @@ module ActiveScaffold
       # run the configuration
       @active_scaffold_config = ActiveScaffold::Config::Core.new(model_id)
       @active_scaffold_config_block = block
+
+      @active_scaffold_config.model.class_eval {include ActiveScaffold::ModelPermissions::Permissions}
+
       self.links_for_associations
 
       @active_scaffold_frontends = []

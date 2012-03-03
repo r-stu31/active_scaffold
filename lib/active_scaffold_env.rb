@@ -5,5 +5,3 @@ ActionController::Base.send(:include, ActiveScaffold)
 ActionController::Base.send(:include, ActiveScaffold::RespondsToParent)
 ActionController::Base.send(:include, ActiveScaffold::Helpers::ControllerHelpers)
 ActionView::Base.send(:include, ActiveScaffold::Helpers::ViewHelpers)
-
-Sequel::Model.class_eval     {include ActiveScaffold::ModelPermissions::Permissions}
