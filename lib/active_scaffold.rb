@@ -11,6 +11,7 @@ module ActiveScaffold
   require 'active_scaffold/responds_to_parent'
   require 'active_scaffold/model_permissions'
   require 'active_scaffold/render'
+  require 'active_scaffold/ring'
 
   autoload :AttributeParams, 'active_scaffold/attribute_params'
   autoload :Configurable, 'active_scaffold/configurable'
