@@ -365,7 +365,7 @@ module ActiveScaffold
         value = '' if value.nil?
         value
       }
-      collection.reverse! if order.downcase == 'desc'
+      collection.reverse! if order[:descending]
       collection
     end
   end
