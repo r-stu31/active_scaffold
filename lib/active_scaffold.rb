@@ -10,6 +10,7 @@ module ActiveScaffold
   require 'active_scaffold/paginator'
   require 'active_scaffold/responds_to_parent'
   require 'active_scaffold/model_permissions'
+  require 'active_scaffold/render'
 
   autoload :AttributeParams, 'active_scaffold/attribute_params'
   autoload :Configurable, 'active_scaffold/configurable'
@@ -187,6 +188,7 @@ module ActiveScaffold
 
       # include the rest of the code into the controller: the action core and the included actions
       module_eval do
+        include ActiveScaffold::Render
         include ActiveScaffold::Finder
         include ActiveScaffold::Constraints
         include ActiveScaffold::AttributeParams
