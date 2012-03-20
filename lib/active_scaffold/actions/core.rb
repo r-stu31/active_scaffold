@@ -158,7 +158,7 @@ module ActiveScaffold::Actions
     def conditions_from_params
       conditions = nil
       params.reject {|key, value| [:controller, :action, :id, :page, :sort, :sort_direction].include?(key.to_sym)}.each do |key, value|
-        next unless active_scaffold_config.model.columns.include?(key)
+        next unless active_scaffold_config.model.columns.include?(key.to_sym)
         conditions = merge_conditions(conditions, {"#{active_scaffold_config.model.table_name}__#{key}".to_sym => value})
       end
       conditions
