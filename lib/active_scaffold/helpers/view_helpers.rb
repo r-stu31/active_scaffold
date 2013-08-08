@@ -150,6 +150,9 @@ module ActiveScaffold
           html_options[:onclick] = link.dhtml_confirm.onclick_function(controller, link_id)
         end
         html_options[:class] += " #{link.html_options[:class]}" unless link.html_options[:class].blank?
+        if html_options[:class].split(' ').include?('marked_records_action')
+          html_options['data-tbody_id'] = active_scaffold_tbody_id
+        end
         html_options
       end
 

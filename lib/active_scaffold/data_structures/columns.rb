@@ -30,15 +30,19 @@ module ActiveScaffold::DataStructures
     # the way to add columns to the set. this is primarily useful for virtual columns.
     # note that this also makes columns inheritable
     def add(*args)
-      args.flatten! # allow [] as a param
-      args = args.collect{ |a| a.to_sym }
-
+      args = args.flatten.collect{|a| a.to_sym}
       # make the columns inheritable
       @_inheritable.concat(args)
       # then add columns to @set (unless they already exist)
-      args.each { |a| @set << ActiveScaffold::DataStructures::Column.new(a.to_sym, @active_record_class) unless find_by_name(a) }
+      args.each {|a| @set << ActiveScaffold::DataStructures::Column.new(a, @active_record_class) unless find_by_name(a)}
     end
     alias_method :<<, :add
+
+    def prepend(*args)
+      columns = args.flatten.collect {|a| a.to_sym}
+      @_inheritable.unshift(*(columns.reverse))
+      columns.each {|a| @set.unshift(ActiveScaffold::DataStructures::Column.new(a, @active_record_class)) unless find_by_name(a)}
+    end
 
     def exclude(*args)
       # only remove columns from _inheritable. we never want to completely forget about a column.

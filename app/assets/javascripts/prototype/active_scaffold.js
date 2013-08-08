@@ -61,6 +61,29 @@ document.observe("dom:loaded", function() {
     }
     return true;
   });
+  document.on('ajax:before', 'a.as_action.marked_records_action', function(event) {
+    var action_link = event.findElement();
+    var marked_records = 'marked_records=' + ActiveScaffold.marked_records.join('%2C');
+    var regexp = /(\?|&)marked_records=[^&]*/g;
+    var match;
+    if (action_link.search[0] == '?') {
+      match = regexp.exec(action_link.search);
+      if (match) {
+        action_link.search = action_link.search.slice(0, match.index) + match[1] + marked_records + action_link.search.slice(regexp.lastIndex, action_link.search.length);
+      } else {
+        action_link.search = action_link.search + '&' + marked_records;
+      }
+    } else {
+      action_link.search = '?' + marked_records;
+    }
+    return true;
+  });
+  document.on('ajax:complete', 'a.as_action.marked_records_action', function(event) {
+    var action_link = event.findElement();
+    ActiveScaffold.mark_records(action_link.readAttribute('data-tbody_id'), false);
+    ActiveScaffold.marked_records = [];
+    return true;
+  });
   document.on('ajax:success', 'a.as_action', function(event) {
     var action_link = ActiveScaffold.ActionLink.get(event.findElement());
     if (action_link && event.memo && event.memo.request) {
@@ -135,15 +158,28 @@ document.observe("dom:loaded", function() {
     ActiveScaffold.report_500_response(as_scaffold);
     return true;
   });
-  document.on('mouseover', 'span.in_place_editor_field', function(event) {
+  document.on('mouseover', 'span.mark_record_field,span.mark_heading,span.in_place_editor_field', function(event) {
       event.findElement().addClassName('hover');
   });
-  document.on('mouseout', 'span.in_place_editor_field', function(event) {
+  document.on('mouseout', 'span.mark_record_field,span.mark_heading,span.in_place_editor_field', function(event) {
       event.findElement().removeClassName('hover');
+  });
+  document.on('click', 'span.mark_record_field', function(event) {
+    ActiveScaffold.mark_span(event.findElement('span.mark_record_field'));
+  });
+  document.on('click', 'span.mark_heading', function(event) {
+    var span = event.findElement('span.mark_heading');
+    var checkbox = span.down('input[type="checkbox"]');
+    var tbody_id = span.readAttribute('data-tbody_id');
+    if (checkbox.checked) {
+      ActiveScaffold.mark_records(tbody_id, true);
+    } else {
+      ActiveScaffold.mark_records(tbody_id, false);
+    }
   });
   document.on('click', 'span.in_place_editor_field', function(event) {
     var span = event.findElement('span.in_place_editor_field');
-    
+
     if (typeof(span.inplace_edit) === 'undefined') {
       var options = {htmlResponse: false,
                      onEnterHover: null,
@@ -159,14 +195,14 @@ document.observe("dom:loaded", function() {
       if(!(my_parent.nodeName.toLowerCase() === 'td' || my_parent.nodeName.toLowerCase() === 'th')){
           my_parent = span.up('td');
       }
-          
+
       if (my_parent.nodeName.toLowerCase() === 'td') {
         var heading_selector = '.' + span.up().readAttribute('class').split(' ')[0] + '_heading';
         column_heading = span.up('.active-scaffold').down(heading_selector);
       } else if (my_parent.nodeName.toLowerCase() === 'th') {
         column_heading = my_parent;
       }
-          
+
       var render_url = column_heading.readAttribute('data-ie_render_url'),
           mode = column_heading.readAttribute('data-ie_mode'),
           record_id = span.readAttribute('data-ie_id');
@@ -188,7 +224,7 @@ document.observe("dom:loaded", function() {
         }
         options['params'] += ("eid=" + span.up('div.active-scaffold').readAttribute('data-eid'));
       }
-            
+
       if (mode === 'clone') {
         options.nodeIdSuffix = record_id;
         options.inplacePatternSelector = '#' + column_heading.readAttribute('id') + ' .as_inplace_pattern';
@@ -583,26 +619,41 @@ var ActiveScaffold = {
     );
   },
 
-  // element is tbody id
-  mark_records: function(element, options) {
-    var element = $(element);
-    var mark_checkboxes = $$('#' + element.readAttribute('id') + ' > tr.record td.marked-column input[type="checkbox"]');
-    mark_checkboxes.each(function(item) {
-     if(options.checked === true) {
-       item.writeAttribute({ checked: 'checked' });
-     } else {
-       item.removeAttribute('checked');
-     }
-     item.writeAttribute('value', ('' + !options.checked));
-    });
-    if(options.include_mark_all === true) {
-      var mark_all_checkbox = element.previous('thead').down('th.marked-column_heading span input[type="checkbox"]');
-      if(options.checked === true) {
-        mark_all_checkbox.writeAttribute({ checked: 'checked' }); 
-      } else {
-        mark_all_checkbox.removeAttribute('checked');
+  mark_span: function(span, mark_flag) {
+    var record_id = span.readAttribute('data-ie_id');
+    var checkbox = span.down('input[type="checkbox"]');
+    /*
+      when the "mark_flag" is "undefined", the "checked" attribute is already set to the new value,
+      when the "mark_flag" is defined (this function is called by the "mark_records" function), the "checked" attribute is still set to the old value
+    */
+    if (mark_flag == false || (typeof(mark_flag) == 'undefined' && !checkbox.checked)) {
+      ActiveScaffold.unmark_record(record_id);
+    } else {
+      ActiveScaffold.mark_record(record_id);
+    }
+    return checkbox;
+  },
+
+  mark_records: function(tbody_id, mark_flag) {
+    var spans = $$('#' + tbody_id + ' > tr.record td.marked-column span.mark_record_field');
+    var checkbox;
+    for (var i = 0; i < spans.length; i++) {
+      checkbox = ActiveScaffold.mark_span(spans[i], mark_flag);
+      checkbox.checked = mark_flag;
+    }
+  },
+
+  marked_records: [],
+
+  mark_record: function(record_id) {
+    ActiveScaffold.marked_records.push(record_id);
+  },
+
+  unmark_record: function(record_id) {
+    for (var i = ActiveScaffold.marked_records.length - 1; i >= 0; i--) {
+      if (ActiveScaffold.marked_records[i] == record_id) {
+        ActiveScaffold.marked_records.splice(i, 1);
       }
-      mark_all_checkbox.writeAttribute('value', ('' + !options.checked));
     }
   },
 

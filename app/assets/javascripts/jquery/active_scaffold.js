@@ -38,6 +38,29 @@ jQuery(document).ready(function() {
     }
     return true;
   });
+  jQuery('a.as_action.marked_records_action').live('ajax:before', function(event) {
+    var action_link = jQuery(this);
+    var marked_records = 'marked_records=' + ActiveScaffold.marked_records.join('%2C');
+    var regexp = /(\?|&)marked_records=[^&]*/g;
+    var match;
+    if (action_link.search[0] == '?') {
+      match = regexp.exec(action_link.search);
+      if (match) {
+        action_link.search = action_link.search.slice(0, match.index) + match[1] + marked_records + action_link.search.slice(regexp.lastIndex, action_link.search.length);
+      } else {
+        action_link.search = action_link.search + '&' + marked_records;
+      }
+    } else {
+      action_link.search = '?' + marked_records;
+    }
+    return true;
+  });
+  jQuery('a.as_action.marked_records_action').live('ajax:complete', function(event) {
+    var action_link = jQuery(this);
+    ActiveScaffold.mark_records(action_link.readAttribute('data-tbody_id'), false);
+    ActiveScaffold.marked_records = [];
+    return true;
+  });
   jQuery('a.as_action').live('ajax:success', function(event, response) {
     var action_link = ActiveScaffold.ActionLink.get(jQuery(this));
     if (action_link) {
@@ -111,7 +134,7 @@ jQuery(document).ready(function() {
     ActiveScaffold.report_500_response(as_scaffold);
     return true;
   });
-  jQuery('span.in_place_editor_field').live('hover', function(event) {
+  jQuery('span.mark_record_field,span.mark_heading,span.in_place_editor_field').live('hover', function(event) {
     jQuery(this).data(); // $ 1.4.2 workaround
     if (event.type == 'mouseenter') {
       if (typeof(jQuery(this).data('editInPlace')) === 'undefined') jQuery(this).addClass("hover");
@@ -120,6 +143,19 @@ jQuery(document).ready(function() {
       if (typeof(jQuery(this).data('editInPlace')) === 'undefined') jQuery(this).removeClass("hover");
     }
     return true;
+  });
+  jQuery('span.mark_record_field').live('click', function(event) {
+    ActiveScaffold.mark_span(jQuery(this));
+  });
+  jQuery('span.mark_heading').live('click', function(event) {
+    var span = jQuery(this);
+    var checkbox = span.find('input[type="checkbox"]').first();
+    var tbody_id = span.attr('data-tbody_id');
+    if (checkbox.checked) {
+      ActiveScaffold.mark_records(tbody_id, true);
+    } else {
+      ActiveScaffold.mark_records(tbody_id, false);
+    }
   });
   jQuery('span.in_place_editor_field').live('click', function(event) {
     ActiveScaffold.in_place_editor_field_clicked(jQuery(this));
@@ -653,28 +689,37 @@ var ActiveScaffold = {
     });
   },
 
-  // element is tbody id
-  mark_records: function(element, options) {
-    if (typeof(element) == 'string') element = '#' + element;
-    var element = jQuery(element);
-    var mark_checkboxes = jQuery('#' + element.attr('id') + ' > tr.record td.marked-column input[type="checkbox"]');
-    mark_checkboxes.each(function (index) {
-      var item = jQuery(this);
-     if(options.checked === true) {
-       item.attr('checked', 'checked');
-     } else {
-       item.removeAttr('checked');
-     }
-     item.attr('value', ('' + !options.checked));
-    });
-    if(options.include_mark_all === true) {
-      var mark_all_checkbox = element.prev('thead').find('th.marked-column_heading span input[type="checkbox"]');
-      if(options.checked === true) {
-        mark_all_checkbox.attr('checked', 'checked');
-      } else {
-        mark_all_checkbox.removeAttr('checked');
+  mark_span: function(span, mark_flag) {
+    var record_id = span.attr('data-ie_id');
+    var checkbox = span.find('input[type="checkbox"]').first();
+    if (mark_flag == false || (typeof(mark_flag) == 'undefined' && !checkbox.checked)) {
+      ActiveScaffold.unmark_record(record_id);
+    } else {
+      ActiveScaffold.mark_record(record_id);
+    }
+    return checkbox;
+  },
+
+  mark_records: function(tbody_id, mark_flag) {
+    var spans = $('#' + tbody_id + ' > tr.record td.marked-column span.mark_record_field');
+    var checkbox;
+    for (var i = 0; i < spans.length; i++) {
+      checkbox = ActiveScaffold.mark_span(spans[i], mark_flag);
+      checkbox.checked = mark_flag;
+    }
+  },
+
+  marked_records: [],
+
+  mark_record: function(record_id) {
+    ActiveScaffold.marked_records.push(record_id);
+  },
+
+  unmark_record: function(record_id) {
+    for (var i = ActiveScaffold.marked_records.length - 1; i >= 0; i--) {
+      if (ActiveScaffold.marked_records[i] == record_id) {
+        ActiveScaffold.marked_records.splice(i, 1);
       }
-      mark_all_checkbox.attr('value', ('' + !options.checked));
     }
   },
 

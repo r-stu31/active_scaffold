@@ -1,0 +1,30 @@
+#########
+# HOWTO #
+#########
+
+1) add the :mark action
+2) use css class "marked_records_action" for actions working with marked records
+3) use the controller method "marked_records" to retrieve the IDs of marked records
+
+########################################
+# Example code for Comments controller #
+########################################
+
+config.actions.add :mark
+config.action_links.add('delete_selected', :label => 'Delete selected comments', :type => :collection, :method => :post,
+  :position => false, :html_options => {:class => 'marked_records_action'})
+
+...
+
+def delete_selected
+  record_ids = marked_records
+  Comment.where(:id => record_ids).all.each do |comment|
+    comment.deleted = true
+    comment.save(:columns => [:deleted], :validate => false)
+  end
+  render :update do |page|
+    record_ids.each do |record_id|
+      page.remove(element_row_id(:action => 'list', :id => record_id))
+    end
+  end
+end
