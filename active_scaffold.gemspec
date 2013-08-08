@@ -12,7 +12,7 @@ Gem::Specification.new do |s|
   s.summary = %q{ActiveScaffold version supporting Sequel with Rails 3.1.}
   s.description = %q{The original ActiveScaffold supports Rails (http://rubyonrails.org/) with it's native ORM ActiveRecord. This version replaces support for ActiveRecord with support for Sequel (http://sequel.rubyforge.org/).}
   s.require_paths = ["lib"]
-  s.files = Dir["{app,config,frontends,lib,public,shoulda_macros,vendor}/**/*"] + %w[MIT-LICENSE CHANGELOG README]
+  s.files = Dir["{app,config,doc,frontends,lib,public,shoulda_macros,vendor}/**/*"] + %w[MIT-LICENSE CHANGELOG README]
   s.extra_rdoc_files = [
     "README"
   ]
