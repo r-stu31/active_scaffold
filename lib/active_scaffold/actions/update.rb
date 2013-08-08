@@ -97,17 +97,25 @@ module ActiveScaffold::Actions
     end
 
     def do_update_column
-      @record = active_scaffold_config.model.find(params[:id])
-      if @record.authorized_for?(:crud_type => :update, :column => params[:column])
-        column = active_scaffold_config.columns[params[:column].to_sym]
-        params[:value] ||= @record.column_for_attribute(params[:column]).default unless @record.column_for_attribute(params[:column]).nil? || @record.column_for_attribute(params[:column])[:allow_null]
-        unless column.nil?
-          params[:value] = column_value_from_param_value(@record, column, params[:value])
-          params[:value] = [] if params[:value].nil? && column.form_ui && column.plural_association?
+      # delete from params so update :table won't break urls, also they shouldn't be used in sort links too
+      value = params.delete(:value)
+      column = params.delete(:column).to_sym
+      params.delete(:original_html)
+      params.delete(:original_value)
+
+      @record = find_if_allowed(params[:id], :read)
+      if @record.authorized_for?(:crud_type => :update, :column => column)
+        @column = active_scaffold_config.columns[column]
+        value ||= unless @column.column.nil? || @column.column.null
+          @column.column.default == true ? false : @column.column.default
         end
-        @record.send("#{params[:column]}=", params[:value])
+        unless @column.nil?
+          value = column_value_from_param_value(@record, @column, value)
+          value = [] if value.nil? && @column.form_ui && @column.plural_association?
+        end
+        @record.send("#{@column.name}=", value)
         before_update_save(@record)
-        @record.save
+        self.successful = @record.save
         after_update_save(@record)
       end
     end
