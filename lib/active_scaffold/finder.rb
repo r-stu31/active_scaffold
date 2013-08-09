@@ -9,9 +9,13 @@ module ActiveScaffold
         return unless columns.length > 0
         like_pattern = like_pattern(text_search)
         tokens = [tokens] if tokens.is_a? String
-        obj = active_scaffold_config.model.new  # for typecasting purposes
 
-        tokens.collect do |token|
+        # for typecasting purposes
+        obj = active_scaffold_config.model.new
+        orig_raise_on_typecast_failure = active_scaffold_config.model.raise_on_typecast_failure
+        active_scaffold_config.model.raise_on_typecast_failure = true
+
+        result = tokens.collect do |token|
           pattern = like_pattern.sub('?', token)
           columns.collect do |column|
             if column.column.nil? or column.column[:type] == :string
@@ -24,6 +28,11 @@ module ActiveScaffold
             end
           end.compact.inject {|a,b| (a | b)}
         end.inject {|a,b| (a & b)}
+
+        # restore original setting
+        active_scaffold_config.model.raise_on_typecast_failure = orig_raise_on_typecast_failure
+
+        result
       end
 
       # Generates an SQL condition for the given ActiveScaffold column based on
