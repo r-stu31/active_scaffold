@@ -1,6 +1,7 @@
 module ActiveScaffold::Actions
   module Search
     include ActiveScaffold::Actions::CommonSearch
+
     def self.included(base)
       base.before_filter :search_authorized_filter, :only => :show_search
       base.before_filter :store_search_params_into_session, :only => [:index]
@@ -13,14 +14,17 @@ module ActiveScaffold::Actions
     end
 
     protected
+
     def search_respond_to_html
       render(:action => "search")
     end
+
     def search_respond_to_js
       render(:partial => "search")
     end
+
     def do_search
-      query = search_params.to_s.strip rescue ''
+      query = search_params.to_s
       unless query.empty?
         columns = active_scaffold_config.search.columns
         text_search = active_scaffold_config.search.text_search
@@ -37,10 +41,12 @@ module ActiveScaffold::Actions
     end
 
     private
+
     def search_authorized_filter
       link = active_scaffold_config.search.link || active_scaffold_config.search.class.link
       raise ActiveScaffold::ActionNotAllowed unless self.send(link.security_method)
     end
+
     def search_formats
       (default_formats + active_scaffold_config.formats + active_scaffold_config.search.formats).uniq
     end
