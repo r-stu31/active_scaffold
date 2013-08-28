@@ -172,7 +172,9 @@ module ActiveScaffold::Actions
           model = params[:record][sti_key].constantize
         end
       end
-      model.new(build_options)
+      m = model.new
+      build_options.each {|k,v| m.send("#{k}=", v)}
+      m
     end
 
     private
