@@ -45,7 +45,7 @@ module ActiveScaffold
                 options = active_scaffold_input_text_options(options) if text_types.include?(column.column[:type])
                 if column.column[:type] == :string && options[:maxlength].blank?
                   options[:maxlength] = column.maxlength
-                  options[:size] ||= ActionView::Helpers::InstanceTag::DEFAULT_FIELD_OPTIONS["size"]
+                  options[:size] ||= options[:maxlength].to_i > 30 ? 30 : options[:maxlength]
                 end
                 options[:include_blank] = true if column.column[:allow_null] and [:date, :datetime, :time].include?(column.column[:type])
                 options[:value] = format_number_value(@record.send(column.name), column.options) if column.number?
