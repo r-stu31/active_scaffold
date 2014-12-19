@@ -3,7 +3,13 @@ try {
 var action_link = ActiveScaffold.find_action_link('<%= form_selector %>');
 action_link.update_flash_messages('<%= escape_javascript(render(:partial => 'messages')) %>');
 <% if controller.send(:successful?) %>
-  <% if update_refresh_list? %>
+  <% if render_parent? %>
+    <% if nested_singular_association? || render_parent_action == :row %>
+      action_link.close();
+    <% else %>
+      ActiveScaffold.reload('<%= url_for(render_parent_options) %>');
+    <% end %>
+  <% elsif update_refresh_list? %>
     ActiveScaffold.replace_html('<%= active_scaffold_content_id %>', '<%= escape_javascript(render(:partial => 'list', :layout => false)) %>');
   <% else %>
     <% updated_row = render(:partial => 'list_record', :locals => {:record => @record}) %>
