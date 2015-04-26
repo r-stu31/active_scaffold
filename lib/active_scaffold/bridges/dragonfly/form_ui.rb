@@ -6,12 +6,8 @@ module ActiveScaffold
         input = file_field(:record, column.name, options)
         dragonfly = @record.send("#{column.name}")
         if dragonfly.present?
-          if ActiveScaffold.js_framework == :jquery
-            js_remove_file_code = "$(this).prev().val('true'); $(this).parent().hide().next().show(); return false;";
-          else
-            js_remove_file_code = "$(this).previous().value='true'; $(this).up().hide().next().show(); return false;";
-          end
-          
+          js_remove_file_code = "jQuery(this).prev().val('true'); jQuery(this).parent().hide().next().show(); return false;";
+
           content = active_scaffold_column_dragonfly(column, @record)
           content_tag(:div,
             content + " | " +

@@ -15,16 +15,7 @@ options['data-loading'] = true unless live_search
 
 <script type="text/javascript">
 //<![CDATA[
-<% if ActiveScaffold.js_framework == :prototype %>
-  new TextFieldWithExample('<%= search_input_id %>', '<%= as_(live_search ? :live_search : :search_terms) %>', {focus: true});
-<% end -%>
-<% if live_search && ActiveScaffold.js_framework == :prototype -%>
-  $(<%= search_input_id.to_json.html_safe %>).next().hide();
-  new Form.Element.DelayedObserver('<%= search_input_id %>', 0.5, function(element, value) {
-    if (!$(element.id)) return false; // because the element may have been destroyed
-    $(element).next().click();
-  });
-<% elsif live_search && ActiveScaffold.js_framework == :jquery %>
+<% if live_search %>
   jQuery(<%= "##{search_input_id}".to_json.html_safe %>).next().hide();
   jQuery(<%= "##{search_input_id}".to_json.html_safe %>).delayedObserver(0.5, function() {
      jQuery(<%= "##{search_input_id}".to_json.html_safe %>).parent().trigger("submit");});

@@ -11,7 +11,7 @@ Authors:
 Project home:
 	http://code.google.com/p/jquery-in-place-editor/
 
-Patches with tests welcomed! For guidance see the tests at </spec/unit/spec.js>. To submit, attach them to the bug tracker.
+Patches with tests welcomed! For guidance see the tests </spec/unit/>. To submit, attach them to the bug tracker.
 
 License:
 This source file is subject to the BSD license bundled with this package.
@@ -19,6 +19,7 @@ Available online: {@link http://www.opensource.org/licenses/bsd-license.php}
 If you did not receive a copy of the license, and are unable to obtain it, 
 learn to use a search engine.
 
+Rev: 161
 */
 
 (function($){
@@ -26,9 +27,7 @@ learn to use a search engine.
 $.fn.editInPlace = function(options) {
 	
 	var settings = $.extend({}, $.fn.editInPlace.defaults, options);
-	
 	assertMandatorySettingsArePresent(settings);
-	
 	preloadImage(settings.saving_image);
 	
 	return this.each(function() {
@@ -47,44 +46,45 @@ $.fn.editInPlace = function(options) {
 /// Required Options: Either url or callback, so the editor knows what to do with the edited values.
 $.fn.editInPlace.defaults = {
 	url:				"", // string: POST URL to send edited content
-	ajax_data_type: "html", // string: dataType (html|script) for ajax call to save updated value
+	ajax_data_type:		"html", // string: dataType (html|script) for ajax call to save updated value
 	bg_over:			"#ffc", // string: background color of hover of unactivated editor
 	bg_out:				"transparent", // string: background color on restore from hover
-	hover_class:		"",  // string: class added to root element during hover. Will override bg_over and bg_out
+	hover_class:		"", // string: class added to root element during hover. Will override bg_over and bg_out
 	show_buttons:		false, // boolean: will show the buttons: cancel or save; will automatically cancel out the onBlur functionality
 	save_button:		'<button class="inplace_save">Save</button>', // string: image button tag to use as “Save” button
 	cancel_button:		'<button class="inplace_cancel">Cancel</button>', // string: image button tag to use as “Cancel” button
 	params:				"", // string: example: first_name=dave&last_name=hauenstein extra paramters sent via the post request to the server
-	field_type:			"text", // string: "text", "textarea", or "select", or "remote", or "clone";  The type of form field that will appear on instantiation
+	field_type:			"text", // string: "text", "textarea", or "select", or "remote", or "clone"; The type of form field that will appear on instantiation
 	default_text:		"(Click here to add text)", // string: text to show up if the element that has this functionality is empty
-	use_html:			false, // boolean, set to true if the editor should use jQuery.fn.html() to extract the value to show from the dom node
+	use_html:			false, // boolean, set to true if the editor should use jQuery.fn.html() to extract the value to show from the dom node (keep in mind that IE will uppercase all tags, so use with caution)
 	textarea_rows:		10, // integer: set rows attribute of textarea, if field_type is set to textarea. Use CSS if possible though
 	textarea_cols:		25, // integer: set cols attribute of textarea, if field_type is set to textarea. Use CSS if possible though
 	select_text:		"Choose new value", // string: default text to show up in select box
 	select_options:		"", // string or array: Used if field_type is set to 'select'. Can be comma delimited list of options 'textandValue,text:value', Array of options ['textAndValue', 'text:value'] or array of arrays ['textAndValue', ['text', 'value']]. The last form is especially usefull if your labels or values contain colons)
 	text_size:			null, // integer: set cols attribute of text input, if field_type is set to text. Use CSS if possible though
-	editor_url: null, // for field_type: remote url to get html_code for edit_control
-	loading_text: 'Loading...', // shown if inplace editor is loaded from server
+	editor_url:			null, // for field_type: remote url to get html_code for edit_control
+	loading_text:		'Loading...', // shown if inplace editor is loaded from server
 	// Specifying callback_skip_dom_reset will disable all saving_* options
 	saving_text:		undefined, // string: text to be used when server is saving information. Example "Saving..."
 	saving_image:		"", // string: uses saving text specify an image location instead of text while server is saving
 	saving_animation_color: 'transparent', // hex color string, will be the color the pulsing animation during the save pulses to. Note: Only works if jquery-ui is loaded
-	clone_selector: null, // if field_type clone a selector to clone editor from
-	clone_id_suffix: null, // if field_type clone a suffix to create unique ids
+	clone_selector:		null, // if field_type clone a selector to clone editor from
+	clone_id_suffix:	null, // if field_type clone a suffix to create unique ids
 	
 	value_required:		false, // boolean: if set to true, the element will not be saved unless a value is entered
 	element_id:			"element_id", // string: name of parameter holding the id or the editable
 	update_value:		"update_value", // string: name of parameter holding the updated/edited value
 	original_value:		'original_value', // string: name of parameter holding the updated/edited value
 	original_html:		"original_html", // string: name of parameter holding original_html value of the editable /* DEPRECATED in 2.2.0 */ use original_value instead.
-	save_if_nothing_changed:	false,  // boolean: submit to function or server even if the user did not change anything
+	save_if_nothing_changed:	false, // boolean: submit to function or server even if the user did not change anything
 	on_blur:			"save", // string: "save" or null; what to do on blur; will be overridden if show_buttons is true
 	cancel:				"", // string: if not empty, a jquery selector for elements that will not cause the editor to open even though they are clicked. E.g. if you have extra buttons inside editable fields
 	
 	// All callbacks will have this set to the DOM node of the editor that triggered the callback
 	
 	callback:			null, // function: function to be called when editing is complete; cancels ajax submission to the url param. Prototype: function(idOfEditor, enteredText, orinalHTMLContent, settingsParams, callbacks). The function needs to return the value that should be shown in the dom. Returning undefined means cancel and will restore the dom and trigger an error. callbacks is a dictionary with two functions didStartSaving and didEndSaving() that you can use to tell the inline editor that it should start and stop any saving animations it has configured. /* DEPRECATED in 2.1.0 */ Parameter idOfEditor, use $(this).attr('id') instead
-	callback_skip_dom_reset: false, // boolean: set this to true if the callback should handle replacing the editor with the new value to show
+	callback_skip_dom_reset:	false, // boolean: set this to true if the callback should handle replacing the editor with the new value to show
+	beforeSend:			null, // function: this function gets called before sending new value to server. Prototype: function(request, requestSettings)
 	success:			null, // function: this function gets called if server responds with a success. Prototype: function(newEditorContentString)
 	error:				null, // function: this function gets called if server responds with an error. Prototype: function(request)
 	error_sink:			function(idOfEditor, errorString) { alert(errorString); }, // function: gets id of the editor and the error. Make sure the editor has an id, or it will just be undefined. If set to null, no error will be reported. /* DEPRECATED in 2.1.0 */ Parameter idOfEditor, use $(this).attr('id') instead
@@ -157,7 +157,7 @@ $.extend(InlineEditor.prototype, {
 	},
 	
 	disconnectOpeningEvents: function() {
-	 	// prevent re-opening the editor when it is already open
+		// prevent re-opening the editor when it is already open
 		this.dom.unbind('.editInPlace');
 	},
 	
@@ -179,14 +179,15 @@ $.extend(InlineEditor.prototype, {
 		if ( ! this.shouldOpenEditor(anEvent))
 			return;
 		
-		this.workAroundFirefoxBlurBug();
 		this.disconnectOpeningEvents();
 		this.removeHoverEffect();
 		this.removeInsertedDefaultTextIfNeccessary();
 		this.saveOriginalValue();
 		this.markEditorAsActive();
 		this.replaceContentWithEditor();
-		this.connectOpeningEventsToEditor();
+		this.setInitialValue();
+		this.workAroundMissingBlurBug();
+		this.connectClosingEventsToEditor();
 		this.triggerDelegateCall('didOpenEditInPlace');
 	},
 	
@@ -239,20 +240,16 @@ $.extend(InlineEditor.prototype, {
 			this.dom.text(aValue);
 	},
 	
-	workAroundFirefoxBlurBug: function() {
-		if ( ! $.browser.mozilla)
-			return;
-		
-		// TODO: Opera seems to also have this bug....
-		
-		// Firefox will forget to send a blur event to an input element when another one is
-		// created and selected programmatically. This means that if another inline editor is
-		// opened, existing inline editors will _not_ close if they are configured to submit when blurred.
-		// This is actually the first time I've written browser specific code for a browser different than IE! Wohoo!
+	workAroundMissingBlurBug: function() {
+		// Strangely, all browser will forget to send a blur event to an input element
+		// when another one is created and selected programmatically. (at least under some circumstances).
+		// This means that if another inline editor is opened, existing inline editors will _not_ close
+		// if they are configured to submit when blurred.
 		
 		// Using parents() instead document as base to workaround the fact that in the unittests
 		// the editor is not a child of window.document but of a document fragment
-		this.dom.parents(':last').find('.editInPlace-active :input').blur();
+		var ourInput = this.dom.find(':input');
+		this.dom.parents(':last').find('.editInPlace-active :input').not(ourInput).blur();
 	},
 	
 	replaceContentWithEditor: function() {
@@ -274,7 +271,7 @@ $.extend(InlineEditor.prototype, {
 			editor = this.createSelectEditor();
 		else if ("text" === this.settings.field_type)
 			editor = $('<input type="text" ' + this.inputNameAndClass() 
-				+ ' size="' + this.settings.text_size  + '" />');
+				+ ' size="' + this.settings.text_size + '" />');
 		else if ("textarea" === this.settings.field_type)
 			editor = $('<textarea ' + this.inputNameAndClass() 
 				+ ' rows="' + this.settings.textarea_rows + '" '
@@ -282,83 +279,93 @@ $.extend(InlineEditor.prototype, {
 		else if ("remote" === this.settings.field_type)
 			editor = this.createRemoteGeneratedEditor();
 		else if ("clone" === this.settings.field_type) {
-		  editor = this.cloneEditor();
-		  return editor;
+			editor = this.cloneEditor();
+			return editor;
 		}
-		editor.val(this.triggerDelegateCall('willOpenEditInPlace', this.originalValue));
 		return editor;
 	},
 	
+	setInitialValue: function() {
+		if (this.settings.field_type == 'remote' || this.settings.field_type == 'clone') return; // remote and clone generated editor doesn't need initial value
+		var initialValue = this.triggerDelegateCall('willOpenEditInPlace', this.originalValue);
+		var editor = this.dom.find(':input');
+		editor.val(initialValue);
+
+		// Workaround for select fields which don't contain the original value.
+		// Somehow the browsers don't like to select the instructional choice (disabled) in that case
+		if (editor.val() !== initialValue)
+			editor.val(''); // selects instructional choice
+	},
+
 	createRemoteGeneratedEditor: function () {
-	  this.dom.html(this.settings.loading_text);
-	  return $($.ajax({
-            url: this.settings.editor_url,
-            async: false
-           }).responseText);
+		this.dom.html(this.settings.loading_text);
+		return $($.ajax({
+			url: this.settings.editor_url,
+			async: false
+		}).responseText);
 	},
 	
 	cloneEditor: function() {
-    var patternNodes = this.getPatternNodes(this.settings.clone_selector);
-    if (patternNodes.editNode == null) {
-      alert('did not find any matching node for ' + this.settings.clone_selector);
-      return;
-    }
+		var patternNodes = this.getPatternNodes(this.settings.clone_selector);
+		if (patternNodes.editNode == null) {
+			alert('did not find any matching node for ' + this.settings.clone_selector);
+			return;
+		}
 
-    var editorNode = patternNodes.editNode.clone();
-    var clonedNodes = null;
-    if (editorNode.attr('id').length > 0) editorNode.attr('id', editorNode.attr('id') + this.settings.clone_id_suffix);
-    editorNode.attr('name', 'inplace_value');
-    editorNode.addClass('editor_field');
-    this.setValue(editorNode, this.originalValue);
-    clonedNodes = editorNode;
-    
-    if (patternNodes.additionalNodes) {
-      patternNodes.additionalNodes.each(function (index, node) {
-        var patternNode = $(node).clone();
-        if (patternNode.attr('id').length > 0) {
-          patternNode.attr('id', patternNode.attr('id') + this.settings.clone_id_suffix);
-        }
-        clonedNodes = clonedNodes.after(patternNode);
-      });
-    }
-    return clonedNodes;
-  },
-  
-  getPatternNodes: function(clone_selector) {
-    var nodes = {editNode: null, additionalNodes: null};
-    var selectedNodes = $(clone_selector);
-    var firstNode = selectedNodes.first();
-    
-    if (typeof(firstNode) !== 'undefined') {
-      // AS inplace_edit_control_container -> we have to select all child nodes
-      // Workaround for ie which does not support css > selector
-      if (firstNode.hasClass('as_inplace_pattern')) {
-        selectedNodes = firstNode.children();
-      }
-      nodes.editNode = selectedNodes.first();
-      // buggy...
-      //nodes.additionalNodes = selectedNodes.find(':gt(0)');
-    }
-    return nodes;
-  },
-  
-  setValue: function(editField, textValue) {
-    var function_name = 'setValueFor' + editField.get(0).nodeName.toLowerCase();
-    if (typeof(this[function_name]) == 'function') {
-      this[function_name](editField, textValue);
-    } else {
-      editField.val(textValue);
-    }
-  },
-  
-  setValueForselect: function(editField, textValue) {
-    var option_value = editField.children("option:contains('" + textValue + "')").val();
-    
-    if (typeof(option_value) !== 'undefined') {
-      editField.val(option_value);
-    }
-  },
+		var editorNode = patternNodes.editNode.clone();
+		var clonedNodes = null;
+		if (editorNode.data('id')) editorNode.attr('id', editorNode.data('id') + this.settings.clone_id_suffix);
+		editorNode.attr('name', 'inplace_value');
+		editorNode.addClass('editor_field');
+		this.setValue(editorNode, this.originalValue);
+		clonedNodes = editorNode;
+
+		if (patternNodes.additionalNodes) {
+			patternNodes.additionalNodes.each(function (index, node) {
+				var patternNode = $(node).clone();
+				if (patternNode.data('id')) {
+					patternNode.attr('id', patternNode.data('id') + this.settings.clone_id_suffix);
+				}
+				clonedNodes = clonedNodes.after(patternNode);
+			});
+		}
+		return clonedNodes;
+	},
+
+	getPatternNodes: function(clone_selector) {
+		var nodes = {editNode: null, additionalNodes: null};
+		var selectedNodes = $(clone_selector);
+		var firstNode = selectedNodes.first();
+
+		if (typeof(firstNode) !== 'undefined') {
+			// AS inplace_edit_control_container -> we have to select all child nodes
+			// Workaround for ie which does not support css > selector
+			if (firstNode.hasClass('as_inplace_pattern')) {
+				selectedNodes = firstNode.children();
+			}
+			nodes.editNode = selectedNodes.first();
+			nodes.additionalNodes = selectedNodes.slice(1);
+		}
+		return nodes;
+	},
 	
+	setValue: function(editField, textValue) {
+		var function_name = 'setValueFor' + editField.get(0).nodeName.toLowerCase();
+		if (typeof(this[function_name]) == 'function') {
+			this[function_name](editField, textValue);
+		} else {
+			editField.val(textValue);
+		}
+	},
+
+	setValueForselect: function(editField, textValue) {
+		var option_value = editField.children("option:contains('" + textValue + "')").val();
+
+		if (typeof(option_value) !== 'undefined') {
+			editField.val(option_value);
+		}
+	},
+
 	inputNameAndClass: function() {
 		return ' name="inplace_value" class="inplace_field" ';
 	},
@@ -373,7 +380,6 @@ $.extend(InlineEditor.prototype, {
 			optionsArray = optionsArray.split(',');
 			
 		for (var i=0; i<optionsArray.length; i++) {
-			
 			var currentTextAndValue = optionsArray[i];
 			if ( ! $.isArray(currentTextAndValue))
 				currentTextAndValue = currentTextAndValue.split(':');
@@ -381,16 +387,14 @@ $.extend(InlineEditor.prototype, {
 			var value = trim(currentTextAndValue[1] || currentTextAndValue[0]);
 			var text = trim(currentTextAndValue[0]);
 			
-			var selected = (value == this.originalValue) ? 'selected="selected" ' : '';
-			var option = $('<option ' + selected + ' ></option>').val(value).text(text);
+			var option = $('<option>').val(value).text(text);
 			editor.append(option);
 		}
+
 		return editor;
-		
 	},
 	
-	// REFACT: rename opening is not what it's about. Its about closing events really
-	connectOpeningEventsToEditor: function() {
+	connectClosingEventsToEditor: function() {
 		var that = this;
 		function cancelEditorAction(anEvent) {
 			that.handleCancelEditor(anEvent);
@@ -415,9 +419,11 @@ $.extend(InlineEditor.prototype, {
 			else
 				form.find(".inplace_field").blur(cancelEditorAction);
 			
-			// workaround for firefox bug where it won't submit on enter if no button is shown
-			if ($.browser.mozilla)
+			// workaround for msie & firefox bug where it won't submit on enter if no button is shown
+      /* TODO find a way to restore it without $.browser if it doesn't work
+			if ($.browser.mozilla || $.browser.msie)
 				this.bindSubmitOnEnterInInput();
+      */
 		}
 		
 		form.keyup(function(anEvent) {
@@ -429,8 +435,10 @@ $.extend(InlineEditor.prototype, {
 		
 		// workaround for webkit nightlies where they won't submit at all on enter
 		// REFACT: find a way to just target the nightlies
+    /* TODO find a way to restore it without $.browser if it doesn't work
 		if ($.browser.safari)
 			this.bindSubmitOnEnterInInput();
+    */
 		
 		
 		form.submit(saveEditorAction);
@@ -446,7 +454,7 @@ $.extend(InlineEditor.prototype, {
 			if (enter === event.which)
 				return that.dom.find('form').submit();
 		});
-	 	
+		
 	},
 	
 	handleCancelEditor: function(anEvent) {
@@ -460,9 +468,6 @@ $.extend(InlineEditor.prototype, {
 		enteredText = this.triggerDelegateCall('willCloseEditInPlace', enteredText);
 		
 		this.restoreOriginalValue();
-		if (hasContent(enteredText) 
-			&& ! this.isDisabledDefaultSelectChoice() && !editor.is('select'))
-			this.setClosedEditorContent(enteredText);
 		this.reinit();
 	},
 	
@@ -470,15 +475,15 @@ $.extend(InlineEditor.prototype, {
 		if (false === this.triggerDelegateCall('shouldCloseEditInPlace', true, anEvent))
 			return;
 
-    var editor = this.dom.find(':input:not(:button)');
-    var enteredText = '';
-    if (editor.length > 1) {
-      enteredText = jQuery.map(editor.not('input:checkbox:not(:checked)'), function(item, index) {
-        return $(item).val();
-      });
-    } else {
-		  enteredText = editor.val();
-    }
+		var editor = this.dom.find('[name]:input:not(:button,[name=""])').not('input:checkbox:not(:checked)').not('input:radio:not(:checked)');
+		var enteredText = '';
+		if (editor.length > 1) {
+			enteredText = jQuery.map(editor, function(item, index) {
+			return $(item).val();
+		});
+		} else {
+			enteredText = editor.val();
+		}
 		enteredText = this.triggerDelegateCall('willCloseEditInPlace', enteredText);
 		
 		if (this.isDisabledDefaultSelectChoice()
@@ -555,15 +560,15 @@ $.extend(InlineEditor.prototype, {
 	
 	handleSubmitToServer: function(enteredText) {
 		var data = '';
-    if (typeof(enteredText) === 'string') {
-      data += this.settings.update_value + '=' + encodeURIComponent(enteredText) + '&';
-    } else {
-      for(var i = 0;i < enteredText.length; i++) {
-        data += this.settings.update_value + '[]=' + encodeURIComponent(enteredText[i]) + '&';
-      }
-    }
+		if (typeof(enteredText) === 'string') {
+			data += this.settings.update_value + '=' + encodeURIComponent(enteredText) + '&';
+		} else {
+			for(var i = 0;i < enteredText.length; i++) {
+				data += this.settings.update_value + '[]=' + encodeURIComponent(enteredText[i]) + '&';
+			}
+		}
 
-    data += this.settings.element_id + '=' + this.dom.attr("id")
+		data += this.settings.element_id + '=' + this.dom.attr("id")
 			+ ((this.settings.params) ? '&' + this.settings.params : '')
 			+ '&' + this.settings.original_html + '=' + encodeURIComponent(this.originalValue) /* DEPRECATED in 2.2.0 */
 			+ '&' + this.settings.original_value + '=' + encodeURIComponent(this.originalValue);
@@ -576,19 +581,22 @@ $.extend(InlineEditor.prototype, {
 			type: "POST",
 			data: data,
 			dataType: that.settings.ajax_data_type,
+			beforeSend: function(request, settings) {
+				that.triggerCallback(that.settings.beforeSend, request, settings);
+			},
 			complete: function(request){
 				that.didEndSaving();
 			},
 			success: function(data){
-			  if (that.settings.ajax_data_type == 'html') {
-          var new_text = data || that.settings.default_text;
-          
-          /* put the newly updated info into the original element */
-          // FIXME: should be affected by the preferences switch
-          that.dom.html(new_text);
-          // REFACT: remove dom parameter, already in this, not documented, should be easy to remove
-          // REFACT: callback should be able to override what gets put into the DOM
-        }
+				if (that.settings.ajax_data_type == 'html') {
+					var new_text = data || that.settings.default_text;
+
+					/* put the newly updated info into the original element */
+					// FIXME: should be affected by the preferences switch
+					that.dom.html(new_text);
+					// REFACT: remove dom parameter, already in this, not documented, should be easy to remove
+					// REFACT: callback should be able to override what gets put into the DOM
+				}
 				that.triggerCallback(that.settings.success,data);
 			},
 			error: function(request) {
@@ -609,7 +617,7 @@ $.extend(InlineEditor.prototype, {
 		if ( ! aCallback)
 			return; // callback wasn't specified after all
 		
-		var callbackArguments = Array.prototype.splice.call(arguments, 1);
+		var callbackArguments = Array.prototype.slice.call(arguments, 1);
 		return aCallback.apply(this.dom[0], callbackArguments);
 	},
 	
@@ -620,7 +628,7 @@ $.extend(InlineEditor.prototype, {
 			|| ! $.isFunction(this.settings.delegate[aDelegateMethodName]))
 			return defaultReturnValue;
 		
-		var delegateReturnValue =  this.settings.delegate[aDelegateMethodName](this.dom, this.settings, optionalEvent);
+		var delegateReturnValue = this.settings.delegate[aDelegateMethodName](this.dom, this.settings, optionalEvent);
 		return (undefined === delegateReturnValue)
 			? defaultReturnValue
 			: delegateReturnValue;

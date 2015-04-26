@@ -26,11 +26,7 @@ class ActiveScaffold::Bridges::TinyMce
       end
 
       def onsubmit_with_tiny_mce
-        if ActiveScaffold.js_framework == :jquery
-          submit_js = 'tinyMCE.triggerSave();$(\'textarea.mceEditor\').each(function(index, elem) { tinyMCE.execCommand(\'mceRemoveControl\', false, $(elem).attr(\'id\')); });'
-        else
-          submit_js = 'tinyMCE.triggerSave();this.select(\'textarea.mceEditor\').each(function(elem) { tinyMCE.execCommand(\'mceRemoveControl\', false, elem.id); });'
-        end
+        submit_js = 'tinyMCE.triggerSave();jQuery(\'textarea.mceEditor\').each(function(index, elem) { tinyMCE.execCommand(\'mceRemoveControl\', false, jQuery(elem).attr(\'id\')); });'
         [onsubmit_without_tiny_mce, submit_js].compact.join ';'
       end
     end

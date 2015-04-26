@@ -57,13 +57,13 @@ module ActiveScaffold
 
       def render_parent_options
         if nested_singular_association?
-          {:controller => nested.parent_scaffold.controller_path, :action => :row, :id => nested.parent_id}
+          {:controller => nested.parent_scaffold.controller_path, :action => :index, :id => nested.parent_id}
         elsif params[:parent_sti]
           options = {:controller => params[:parent_sti], :action => render_parent_action(params[:parent_sti])}
           if render_parent_action(params[:parent_sti]) == :index
             options.merge(params.slice(:eid))
           else
-            options.merge({:id => @record.id})
+            options.merge({:action => :index, :id => @record.id})
           end
         end
       end

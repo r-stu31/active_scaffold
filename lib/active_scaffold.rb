@@ -114,18 +114,6 @@ module ActiveScaffold
     session[:hover_supported] == false
   end
   
-  def self.js_framework=(framework)
-    @@js_framework = framework
-  end
-  
-  def self.js_framework
-    @@js_framework ||= if defined? Jquery
-      :jquery
-    elsif defined? PrototypeRails
-      :prototype
-    end
-  end
-
   def self.js_config=(config)
     @@js_config = config
   end
